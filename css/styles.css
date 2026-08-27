@@ -1,0 +1,276 @@
+/* ==========================================================================
+   MOBILYS — tema sobre Bootstrap 5
+   A paleta oficial é aplicada sobrescrevendo as variáveis do Bootstrap,
+   garantindo que todo componente pronto (botões, cards, badges, tabelas,
+   modais, toasts, formulários) herde as cores da marca automaticamente.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+:root{
+  /* Primária (marca) */
+  --primaria-100: #D2EDF1;
+  --primaria-300: #6BBFCC;
+  --primaria-500: #1A90A4;
+  --primaria-700: #0E6B7A;
+  --primaria-900: #073E47;
+
+  /* Secundária (apoio) */
+  --secundaria-100: #D5EDF6;
+  --secundaria-300: #80C3DF;
+  --secundaria-500: #2D8DB5;
+  --secundaria-700: #1C6888;
+  --secundaria-900: #0E3E53;
+
+  /* Neutros */
+  --neutro-50:  #F7F8FA;
+  --neutro-100: #E2E5EA;
+  --neutro-400: #9BA3AE;
+  --neutro-600: #4B5563;
+  --neutro-900: #1A202C;
+
+  /* "Presente/confirmado" = teal da marca | "Ausente/pendente" = neutro
+     (sem cores fora da paleta, conforme restrição do projeto) */
+  --cor-presente:     var(--primaria-700);
+  --cor-presente-bg:  var(--primaria-100);
+  --cor-ausente:      var(--neutro-600);
+  --cor-ausente-bg:   var(--neutro-100);
+
+  --barra-inferior: 64px;
+  --topo: 64px;
+
+  /* ---------------- Overrides das variáveis do Bootstrap ---------------- */
+  --bs-body-font-family: 'Roboto', system-ui, sans-serif;
+  --bs-body-color: var(--neutro-900);
+  --bs-body-bg: var(--neutro-50);
+  --bs-border-radius: .625rem;
+  --bs-border-radius-sm: .4rem;
+  --bs-border-radius-lg: 1rem;
+  --bs-border-color: var(--neutro-100);
+  --bs-link-color: var(--primaria-700);
+  --bs-link-hover-color: var(--primaria-900);
+
+  --bs-primary: var(--primaria-700);
+  --bs-primary-rgb: 14,107,122;
+  --bs-secondary: var(--secundaria-700);
+  --bs-secondary-rgb: 28,104,136;
+  --bs-success: var(--primaria-700);
+  --bs-success-rgb: 14,107,122;
+  --bs-info: var(--secundaria-500);
+  --bs-info-rgb: 45,141,181;
+  --bs-warning: var(--neutro-600);
+  --bs-warning-rgb: 75,85,99;
+  --bs-danger: var(--neutro-600);
+  --bs-danger-rgb: 75,85,99;
+  --bs-light: var(--neutro-50);
+  --bs-light-rgb: 247,248,250;
+  --bs-dark: var(--neutro-900);
+  --bs-dark-rgb: 26,32,44;
+}
+
+h1,h2,h3,h4{ font-weight:700; letter-spacing:-.01em; }
+:focus-visible{ outline: 3px solid var(--secundaria-300); outline-offset: 2px; }
+.d-none-force{ display:none !important; }
+
+/* Botões — Bootstrap já herda --bs-primary, aqui só ajustamos hover/estado */
+.btn-primary{ --bs-btn-hover-bg: var(--primaria-900); --bs-btn-hover-border-color: var(--primaria-900); --bs-btn-active-bg: var(--primaria-900); }
+.btn-outline-primary{ --bs-btn-color: var(--primaria-700); --bs-btn-border-color: var(--primaria-700); --bs-btn-hover-bg: var(--primaria-700); --bs-btn-hover-border-color: var(--primaria-700); }
+.btn:focus{ box-shadow: 0 0 0 .2rem rgba(14,107,122,.22); }
+.form-control:focus, .form-select:focus{ border-color: var(--secundaria-500); box-shadow: 0 0 0 .2rem rgba(45,141,181,.18); }
+
+.table > thead{ background: var(--neutro-50); }
+.table thead th{ text-transform:uppercase; font-size:11px; letter-spacing:.03em; color: var(--neutro-600); font-weight:700; border-bottom-color: var(--neutro-100); }
+.table td, .table th{ border-color: var(--neutro-100); vertical-align:middle; font-size:13.5px; padding:.7rem 1rem; }
+.table-hover > tbody > tr:hover > *{ background-color: var(--primaria-100); }
+.tabela-scroll{ overflow-x:auto; }
+
+.modal-content{ border:none; box-shadow: 0 8px 24px rgba(7,62,71,.18); }
+.modal-header{ border-bottom-color: var(--neutro-100); }
+.toast{ background: var(--neutro-900); color:#fff; }
+.toast.text-bg-mobilys{ background: var(--primaria-900); color:#fff; }
+
+.badge{ font-weight:700; letter-spacing:.02em; font-size:11px; padding:.42em .7em; }
+.selo-presente{ background: var(--cor-presente-bg); color: var(--cor-presente); }
+.selo-ausente{ background: var(--cor-ausente-bg); color: var(--cor-ausente); }
+.selo-pendente{ background: var(--secundaria-100); color: var(--secundaria-900); }
+.selo-info{ background: var(--primaria-100); color: var(--primaria-900); }
+
+/* -------------------------- Motivo assinatura: "linha de rota" -------------------------- */
+.linha-rota{
+  height: 10px;
+  background-image: linear-gradient(90deg, var(--primaria-300) 0 6px, transparent 6px 14px);
+  background-size: 14px 2px;
+  background-repeat: repeat-x;
+  background-position: left 5px;
+  opacity:.9;
+  margin: 2px 0 14px;
+}
+
+/* ============================== TELA DE LOGIN ============================== */
+.login-tela{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 15% 10%, var(--primaria-100) 0%, transparent 45%),
+    radial-gradient(circle at 90% 90%, var(--secundaria-100) 0%, transparent 40%),
+    var(--bs-body-bg);
+}
+.login-cartao{
+  width:100%; max-width: 400px;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 24px rgba(7,62,71,.18);
+}
+.login-logo{
+  display:flex; justify-content:center; align-items:center;
+  margin: -6px 0 6px; position:relative;
+}
+.login-logo::before{
+  content:''; position:absolute; width:190px; height:190px; border-radius:50%;
+  background: radial-gradient(circle, var(--primaria-100) 0%, rgba(210,237,241,0) 70%);
+  z-index:0;
+}
+.login-logo img{ width: 210px; height:auto; position:relative; z-index:1; filter: drop-shadow(0 6px 14px rgba(7,62,71,.18)); }
+.login-subtitulo{ text-align:center; color: var(--neutro-600); font-size: 13.5px; margin-bottom: 22px; }
+.campo-rotulo{ font-size: 12.5px; font-weight:700; color: var(--neutro-600); text-transform: uppercase; letter-spacing:.03em; }
+.login-rodape{ text-align:center; margin-top:18px; margin-bottom:0; font-size:12px; color: var(--neutro-400); }
+
+.perfil-grade{ display:grid; grid-template-columns: repeat(3,1fr); gap:8px; }
+.perfil-opcao{
+  border: 1.5px solid var(--neutro-100); background:#fff; border-radius: var(--bs-border-radius-sm);
+  padding: 12px 6px; text-align:center; font-size:12.5px; font-weight:700;
+  color: var(--neutro-600); display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.perfil-opcao i{ font-size:19px; }
+.perfil-opcao.ativo{ border-color: var(--primaria-700); background: var(--primaria-100); color: var(--primaria-900); }
+
+/* ============================== ESTRUTURA DO APP ============================== */
+.d-none.app-shell, .app-shell.d-none{ display:none !important; }
+.app-shell{ min-height:100vh; padding-top: var(--topo); }
+
+.topo-navbar{
+  height: var(--topo); background: var(--primaria-700); box-shadow: 0 1px 2px rgba(7,62,71,.06), 0 4px 14px rgba(7,62,71,.08);
+  z-index: 1030;
+}
+.topo-marca img{ height:44px; width:auto; object-fit:contain; filter: brightness(0) invert(1); }
+.topo-usuario-btn{ background: rgba(255,255,255,.14); border:none; color:#fff; padding:6px 10px; border-radius: 20px; }
+.topo-usuario-btn::after{ filter: brightness(0) invert(1); }
+.topo-cargo{ background: transparent; color:#fff; font-size:11px; text-transform:uppercase; }
+.dropdown-item i{ color: var(--neutro-600); }
+
+.app-corpo{ padding: 0; }
+.conteudo{ padding: 20px 16px calc(var(--barra-inferior) + 28px); }
+@media (min-width: 992px){
+  .conteudo{ padding: 28px 32px 40px; }
+}
+
+.nav-lateral{
+  background: #fff; border-right:1px solid var(--neutro-100);
+  min-height: calc(100vh - var(--topo)); padding: 18px 10px; gap:2px;
+  position: sticky; top: var(--topo);
+}
+.nav-item-mobilys{ text-decoration:none; cursor:pointer; }
+.nav-item-mobilys:hover{ text-decoration:none; }
+.nav-lateral .nav-item-mobilys{
+  display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:8px;
+  font-size:14px; font-weight:600; color: var(--neutro-600); border:none; background:transparent; text-align:left; width:100%;
+}
+.nav-lateral .nav-item-mobilys i{ font-size:17px; width:20px; text-align:center; }
+.nav-lateral .nav-item-mobilys.ativo{ background: var(--primaria-100); color: var(--primaria-900); }
+
+.nav-inferior{
+  position: fixed; bottom:0; left:0; right:0; height: var(--barra-inferior);
+  background:#fff; border-top:1px solid var(--neutro-100);
+  display:flex; z-index:1030; box-shadow: 0 -2px 12px rgba(7,62,71,.08);
+}
+.nav-inferior .nav-item-mobilys{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; background:transparent; border:none; color: var(--neutro-600);
+  font-size:11px; font-weight:700; padding:6px 2px;
+}
+.nav-inferior .nav-item-mobilys i{ font-size:19px; }
+.nav-inferior .nav-item-mobilys.ativo{ color: var(--primaria-700); }
+
+.rodape-app{
+  text-align:center; padding: 16px; font-size:11.5px; color: var(--neutro-400);
+  border-top:1px solid var(--neutro-100); background:#fff;
+}
+@media (min-width: 992px){ .rodape-app{ margin-left: calc(25% - 3px); } }
+@media (min-width: 1200px){ .rodape-app{ margin-left: calc(16.6667% - 3px); } }
+
+/* ============================== BLOCOS DE CONTEÚDO ============================== */
+.cabecalho-secao{ margin-bottom: 14px; }
+.cabecalho-secao h1{ font-size:21px; }
+.desc{ color: var(--neutro-600); font-size:13.5px; }
+.filtro-select{ max-width: 220px; }
+
+.cartao-resumo{ border-color: var(--neutro-100); border-radius: var(--bs-border-radius-lg); }
+.cartao-resumo .valor{ font-size:24px; font-weight:900; color: var(--primaria-900); }
+.cartao-resumo .rotulo{ font-size:12px; color: var(--neutro-600); font-weight:700; margin-top:2px; }
+.cartao-resumo.destaque{ background: var(--primaria-700); border-color: var(--primaria-700); }
+.cartao-resumo.destaque .valor, .cartao-resumo.destaque .rotulo{ color:#fff; }
+
+.painel{ border-color: var(--neutro-100); border-radius: var(--bs-border-radius-lg); overflow:hidden; }
+.painel .painel-cabecalho{ background:#fff; }
+.painel-cabecalho h2{ font-size:15px; }
+
+.vazio{ text-align:center; padding: 34px 16px; color: var(--neutro-600); }
+.vazio i{ font-size:32px; color: var(--neutro-400); display:block; margin-bottom:8px; }
+.vazio strong{ display:block; color: var(--neutro-900); font-size:14.5px; margin-bottom:4px; }
+
+.icone-btn{
+  background: var(--neutro-50); border:1px solid var(--neutro-100); border-radius:6px;
+  width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;
+}
+.icone-btn:hover{ background: var(--primaria-100); }
+.icone-btn.excluir:hover{ color: var(--primaria-900); }
+
+/* Cartões de aluno (motorista / responsável) — toque grande em campo */
+.lista-alunos-viagem{ display:flex; flex-direction:column; gap:8px; }
+.cartao-aluno{
+  display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--neutro-100);
+  border-radius: var(--bs-border-radius); padding:12px 14px;
+}
+.cartao-aluno .avatar{
+  width:38px; height:38px; border-radius:50%; background: var(--secundaria-100);
+  color: var(--secundaria-900); display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px; flex-shrink:0;
+}
+.cartao-aluno .info{ flex:1; min-width:0; }
+.cartao-aluno .info .nome{ font-weight:700; font-size:14.5px; }
+.cartao-aluno .info .ponto{ font-size:12px; color: var(--neutro-600); }
+.toggle-presenca{ display:flex; gap:6px; flex-shrink:0; }
+.toggle-presenca button{
+  border:1.5px solid var(--neutro-100); background:#fff; border-radius:8px; padding:8px 12px;
+  font-size:12.5px; font-weight:700; color: var(--neutro-600);
+}
+.toggle-presenca button.pres-ativo{ background: var(--cor-presente); border-color: var(--cor-presente); color:#fff; }
+.toggle-presenca button.aus-ativo{ background: var(--cor-ausente); border-color: var(--cor-ausente); color:#fff; }
+
+.faixa-viagem{
+  background: var(--primaria-700); color:#fff; border-radius: var(--bs-border-radius-lg); padding: 18px;
+  margin-bottom: 18px; box-shadow: 0 4px 14px rgba(7,62,71,.18);
+}
+.faixa-viagem h2{ font-size:17px; color:#fff; margin:0; }
+.faixa-viagem .sub{ font-size:12.5px; opacity:.85; }
+.faixa-viagem .badge{ background: rgba(255,255,255,.18); color:#fff; }
+
+/* Trilha de status (aluno acompanha viagem) */
+.trilha{ display:flex; align-items:center; margin: 6px 4px; }
+.trilha .etapa{ flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; }
+.trilha .bola{
+  width:26px; height:26px; border-radius:50%; background: var(--neutro-100); border:2px solid var(--neutro-100);
+  display:flex; align-items:center; justify-content:center; z-index:1; color:#fff; font-size:13px;
+}
+.trilha .rotulo-etapa{ font-size:11px; color: var(--neutro-600); font-weight:700; text-align:center; }
+.trilha .etapa::before{
+  content:''; position:absolute; top:12px; left:-50%; width:100%; height:3px; background: var(--neutro-100); z-index:0;
+}
+.trilha .etapa:first-child::before{ display:none; }
+.trilha .etapa.feita .bola{ background: var(--primaria-700); border-color: var(--primaria-700); }
+.trilha .etapa.feita .rotulo-etapa{ color: var(--primaria-900); }
+.trilha .etapa.feita::before{ background: var(--primaria-700); }
+.trilha .etapa.atual .bola{ background:#fff; border-color: var(--primaria-700); box-shadow: 0 0 0 4px var(--primaria-100); }

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobilys — Entrar</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ============================== TELA DE LOGIN (Autenticar no sistema) ============================== -->
+<section class="login-tela" id="tela-login">
+  <div class="login-cartao card border-0">
+    <div class="card-body p-4 p-sm-5">
+      <div class="login-logo"><img src="assets/logo.png" alt="Mobilys"></div>
+      <p class="login-subtitulo">Controle de presença e gestão do transporte estudantil</p>
+
+      <div class="mb-3">
+        <label class="form-label campo-rotulo">Acessar como</label>
+        <div class="perfil-grade" id="perfil-grade">
+          <button type="button" class="perfil-opcao ativo" data-perfil="admin">
+            <i class="bi bi-person-badge"></i>
+            Administrador
+          </button>
+          <button type="button" class="perfil-opcao" data-perfil="motorista">
+            <i class="bi bi-bus-front"></i>
+            Motorista
+          </button>
+          <button type="button" class="perfil-opcao" data-perfil="responsavel">
+            <i class="bi bi-people"></i>
+            Aluno/Resp.
+          </button>
+        </div>
+      </div>
+
+      <form id="form-login">
+        <div class="mb-3">
+          <label for="in-email" class="form-label campo-rotulo">E-mail</label>
+          <input type="email" class="form-control" id="in-email" placeholder="nome@mobilys.com.br" required>
+        </div>
+        <div class="mb-4">
+          <label for="in-senha" class="form-label campo-rotulo">Senha</label>
+          <input type="password" class="form-control" id="in-senha" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Entrar</button>
+      </form>
+      <p class="login-rodape">Protótipo acadêmico — TCC Mobilys © 2026</p>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

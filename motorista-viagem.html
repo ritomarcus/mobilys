@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobilys — Viagem</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <nav class="navbar navbar-dark topo-navbar fixed-top">
+    <div class="container-fluid px-2 px-lg-3">
+      <a href="motorista-viagem.html" class="navbar-brand topo-marca m-0">
+        <img src="assets/logo.png" alt="Mobilys">
+      </a>
+      <div class="dropdown">
+        <button class="btn topo-usuario-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="badge topo-cargo" id="topo-cargo">Motorista</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li><a class="dropdown-item d-flex align-items-center gap-2 link-sair" href="index.html"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid app-corpo">
+    <div class="row">
+      <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral"></nav>
+
+      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo">
+
+        <div class="cabecalho-secao">
+          <h1>Viagem</h1>
+          <p class="desc">Gerenciamento da viagem em execução</p>
+        </div>
+
+        <div class="faixa-viagem">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+              <h2 id="mv-rota-nome">Rota Jardim das Flores</h2>
+              <p class="sub mb-0" id="mv-info">Turno: Ida · Motorista: você</p>
+            </div>
+            <span class="badge" id="mv-status-selo">Não iniciada</span>
+          </div>
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-light fw-semibold" id="btn-iniciar-viagem"><i class="bi bi-play-fill"></i> Iniciar viagem</button>
+            <button class="btn btn-outline-light fw-semibold d-none" id="btn-encerrar-viagem"><i class="bi bi-stop-fill"></i> Encerrar viagem</button>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <div class="flex-grow-1 busca" style="min-width:160px;">
+            <input type="search" class="form-control" id="busca-alunos-viagem" placeholder="Buscar aluno...">
+          </div>
+          <select class="form-select filtro-select" id="mv-turno-select">
+            <option value="ida">Trajeto de ida</option>
+            <option value="volta">Trajeto de volta</option>
+          </select>
+        </div>
+
+        <p class="desc mb-2">Toque em Presente/Ausente para registrar a presença de cada aluno confirmado.</p>
+        <div class="lista-alunos-viagem" id="lista-alunos-viagem"></div>
+
+      </main>
+    </div>
+  </div>
+
+  <nav class="nav-inferior d-lg-none" id="nav-inferior"></nav>
+  <div class="rodape-app">Mobilys — Sistema de gestão de transporte estudantil · Trabalho de Conclusão de Curso, 2026</div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:1080;">
+  <div id="toast-mobilys" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-2" id="toast-corpo"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script>iniciarPagina('motorista-viagem');</script>
+</body>
+</html>
