@@ -11,45 +11,97 @@
 <body>
 
 <!-- ============================== TELA DE LOGIN (Autenticar no sistema) ============================== -->
-<section class="login-tela" id="tela-login">
-  <div class="login-cartao card border-0">
-    <div class="card-body p-4 p-sm-5">
-      <div class="login-logo"><img src="assets/logo.png" alt="Mobilys"></div>
-      <p class="login-subtitulo">Controle de presença e gestão do transporte estudantil</p>
+<div class="login-split">
 
-      <div class="mb-3">
+  <!-- Lado da marca (some em telas pequenas) -->
+  <div class="login-lado-marca d-none d-lg-flex">
+    <div class="login-marca-conteudo">
+      <img src="assets/logo.png" alt="Mobilys" class="login-marca-logo">
+
+      <h1 class="login-marca-titulo">O transporte escolar<br>sob controle, do início ao fim.</h1>
+      <p class="login-marca-sub">Uma plataforma só para administradores, motoristas e famílias acompanharem cada etapa da viagem.</p>
+
+      <ul class="login-features list-unstyled">
+        <li><span class="login-features-icone"><i class="bi bi-check-lg"></i></span> Registro de presença na ida e na volta</li>
+        <li><span class="login-features-icone"><i class="bi bi-check-lg"></i></span> Acompanhamento da viagem em tempo real</li>
+        <li><span class="login-features-icone"><i class="bi bi-check-lg"></i></span> Relatórios de frequência para a coordenação</li>
+      </ul>
+    </div>
+
+    <!-- Trilha decorativa de rota -->
+    <div class="login-marca-trilha" aria-hidden="true">
+      <svg viewBox="0 0 400 90" preserveAspectRatio="none">
+        <path d="M0,70 C 80,10 140,90 220,40 S 340,10 400,50" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="3" stroke-dasharray="1 14" stroke-linecap="round"/>
+      </svg>
+      <i class="bi bi-geo-alt-fill login-marca-pin p1"></i>
+      <i class="bi bi-geo-alt-fill login-marca-pin p2"></i>
+      <i class="bi bi-bus-front-fill login-marca-bus"></i>
+    </div>
+  </div>
+
+  <!-- Lado do formulário -->
+  <div class="login-lado-form">
+    <div class="login-form-wrap">
+
+      <div class="login-logo-mobile d-lg-none">
+        <img src="assets/logo.png" alt="Mobilys">
+      </div>
+
+      <div class="mb-4">
+        <h2 class="login-titulo" id="login-saudacao">Bem-vindo(a) de volta</h2>
+        <p class="desc mb-0">Selecione seu perfil e informe seus dados para continuar.</p>
+      </div>
+
+      <div class="mb-4">
         <label class="form-label campo-rotulo">Acessar como</label>
         <div class="perfil-grade" id="perfil-grade">
           <button type="button" class="perfil-opcao ativo" data-perfil="admin">
             <i class="bi bi-person-badge"></i>
-            Administrador
+            <span>Administrador</span>
           </button>
           <button type="button" class="perfil-opcao" data-perfil="motorista">
             <i class="bi bi-bus-front"></i>
-            Motorista
+            <span>Motorista</span>
           </button>
           <button type="button" class="perfil-opcao" data-perfil="responsavel">
             <i class="bi bi-people"></i>
-            Aluno/Resp.
+            <span>Aluno/Resp.</span>
           </button>
         </div>
       </div>
 
-      <form id="form-login">
-        <div class="mb-3">
-          <label for="in-email" class="form-label campo-rotulo">E-mail</label>
+      <form id="form-login" novalidate>
+        <div class="form-floating mb-3">
           <input type="email" class="form-control" id="in-email" placeholder="nome@mobilys.com.br" required>
+          <label for="in-email">E-mail</label>
         </div>
-        <div class="mb-4">
-          <label for="in-senha" class="form-label campo-rotulo">Senha</label>
-          <input type="password" class="form-control" id="in-senha" placeholder="••••••••" required>
+
+        <div class="form-floating mb-2 campo-senha">
+          <input type="password" class="form-control" id="in-senha" placeholder="Senha" required>
+          <label for="in-senha">Senha</label>
+          <button type="button" class="btn-olho" id="btn-olho" aria-label="Mostrar senha" tabindex="-1">
+            <i class="bi bi-eye" id="icone-olho"></i>
+          </button>
         </div>
-        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Entrar</button>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="in-lembrar" checked>
+            <label class="form-check-label desc" for="in-lembrar">Lembrar de mim</label>
+          </div>
+          <a href="#" class="login-link-esqueci" onclick="return false;">Esqueci minha senha</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold btn-entrar" id="btn-entrar">
+          <span class="btn-entrar-texto">Entrar</span>
+          <span class="spinner-border spinner-border-sm d-none" id="spinner-entrar" role="status" aria-hidden="true"></span>
+        </button>
       </form>
+
       <p class="login-rodape">Protótipo acadêmico — TCC Mobilys © 2026</p>
     </div>
   </div>
-</section>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="js/app.js"></script>

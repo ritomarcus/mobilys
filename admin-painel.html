@@ -37,15 +37,18 @@
       <!-- Conteúdo principal -->
       <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo">
 
-        <div class="cabecalho-secao">
-          <h1>Painel geral</h1>
-          <p class="desc">Resumo operacional do transporte estudantil hoje</p>
+        <!-- Boas-vindas -->
+        <div class="painel-boas-vindas">
+          <div>
+            <h1 id="painel-saudacao">Bom dia, Administrador</h1>
+            <p class="desc mb-0">Resumo operacional do transporte estudantil hoje</p>
+          </div>
+          <span class="data" id="painel-data">hoje</span>
         </div>
-        <div class="linha-rota"></div>
 
         <div class="row g-3 mb-3">
           <div class="col-6 col-md-3">
-            <div class="card cartao-resumo destaque h-100"><div class="card-body">
+            <div class="card cartao-resumo h-100"><div class="card-body">
               <div class="valor" id="d-alunos">—</div><div class="rotulo">Alunos ativos</div>
             </div></div>
           </div>
@@ -63,6 +66,59 @@
             <div class="card cartao-resumo h-100"><div class="card-body">
               <div class="valor" id="d-presenca">—</div><div class="rotulo">Presença hoje</div>
             </div></div>
+          </div>
+        </div>
+
+        <!-- Ações rápidas -->
+        <div class="row g-2 mb-3">
+          <div class="col-6 col-md-3">
+            <a class="acao-rapida" href="admin-cadastros.html?perfil=admin">
+              <span class="icone"><i class="bi bi-person-plus"></i></span>
+              <div><div class="titulo">Novo aluno</div><div class="sub">Cadastrar</div></div>
+            </a>
+          </div>
+          <div class="col-6 col-md-3">
+            <a class="acao-rapida" href="admin-presencas.html?perfil=admin">
+              <span class="icone"><i class="bi bi-check2-circle"></i></span>
+              <div><div class="titulo">Presenças</div><div class="sub">Ver histórico</div></div>
+            </a>
+          </div>
+          <div class="col-6 col-md-3">
+            <a class="acao-rapida" href="admin-relatorios.html?perfil=admin">
+              <span class="icone"><i class="bi bi-bar-chart-line"></i></span>
+              <div><div class="titulo">Relatório</div><div class="sub">Gerar agora</div></div>
+            </a>
+          </div>
+          <div class="col-6 col-md-3">
+            <a class="acao-rapida" href="admin-cadastros.html?perfil=admin">
+              <span class="icone"><i class="bi bi-signpost-split"></i></span>
+              <div><div class="titulo">Rotas</div><div class="sub">Gerenciar</div></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-lg-7">
+            <div class="card painel h-100">
+              <div class="card-header painel-cabecalho">
+                <h2 class="m-0">Presença ao longo da semana</h2>
+              </div>
+              <div class="card-body">
+                <div class="grafico-caixa"><canvas id="grafico-presenca-semana"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-5">
+            <div class="card painel h-100">
+              <div class="card-header painel-cabecalho">
+                <h2 class="m-0">Alunos por rota</h2>
+              </div>
+              <div class="card-body">
+                <div class="grafico-caixa pequena"><canvas id="grafico-alunos-rota"></canvas></div>
+                <div class="d-flex flex-column gap-2 mt-2" id="legenda-alunos-rota"></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -99,6 +155,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script src="js/app.js"></script>
 <script>iniciarPagina('admin-dashboard');</script>
 </body>

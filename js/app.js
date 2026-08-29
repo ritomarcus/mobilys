@@ -52,6 +52,10 @@ const DB = {
     { data: '20/08/2026', aluno: 'Lucas Andrade', rota: 'Vila Nova', turno: 'Ida', status: 'presente' },
     { data: '20/08/2026', aluno: 'Maria Clara Ferreira', rota: 'Centro', turno: 'Volta', status: 'presente' },
   ],
+  presencaSemana: [
+    { dia: 'Seg', pct: 88 }, { dia: 'Ter', pct: 92 }, { dia: 'Qua', pct: 85 },
+    { dia: 'Qui', pct: 94 }, { dia: 'Sex', pct: 80 }, { dia: 'Sáb', pct: 96 },
+  ],
 };
 
 /* Estado da viagem do motorista */
@@ -128,10 +132,41 @@ if (formLogin){
       btn.classList.add('ativo');
     });
   });
+
+  /* Saudação dinâmica conforme o horário */
+  const elSaudacao = document.getElementById('login-saudacao');
+  if (elSaudacao){
+    const hora = new Date().getHours();
+    const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+    elSaudacao.textContent = `${saudacao}! Bem-vindo(a) de volta`;
+  }
+
+  /* Mostrar/ocultar senha */
+  const btnOlho = document.getElementById('btn-olho');
+  const inSenha = document.getElementById('in-senha');
+  const iconeOlho = document.getElementById('icone-olho');
+  if (btnOlho){
+    btnOlho.addEventListener('click', () => {
+      const visivel = inSenha.type === 'text';
+      inSenha.type = visivel ? 'password' : 'text';
+      iconeOlho.classList.toggle('bi-eye', visivel);
+      iconeOlho.classList.toggle('bi-eye-slash', !visivel);
+    });
+  }
+
+  /* Envio com pequeno feedback de carregamento antes de redirecionar */
+  const btnEntrar = document.getElementById('btn-entrar');
+  const spinnerEntrar = document.getElementById('spinner-entrar');
   formLogin.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (!formLogin.checkValidity()){ formLogin.reportValidity(); return; }
     const perfil = document.querySelector('.perfil-opcao.ativo')?.dataset.perfil || 'admin';
-    window.location.href = `${PRIMEIRA_PAGINA[perfil]}?perfil=${perfil}`;
+    btnEntrar.classList.add('carregando');
+    spinnerEntrar?.classList.remove('d-none');
+    btnEntrar.querySelector('.btn-entrar-texto').textContent = 'Entrando...';
+    setTimeout(() => {
+      window.location.href = `${PRIMEIRA_PAGINA[perfil]}?perfil=${perfil}`;
+    }, 450);
   });
 }
 
@@ -185,6 +220,16 @@ function mostrarToast(msg, sucesso = true){
    ADMIN — DASHBOARD
    ============================================================ */
 function atualizarDashboard(){
+  const elSaudacao = document.getElementById('painel-saudacao');
+  if (elSaudacao){
+    const hora = new Date().getHours();
+    elSaudacao.textContent = hora < 12 ? 'Bom dia, Administrador' : hora < 18 ? 'Boa tarde, Administrador' : 'Boa noite, Administrador';
+  }
+  const elData = document.getElementById('painel-data');
+  if (elData){
+    elData.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+  }
+
   document.getElementById('d-alunos').textContent = DB.alunos.length;
   document.getElementById('d-rotas').textContent = DB.rotas.length;
   document.getElementById('d-veiculos').textContent = DB.veiculos.length;
@@ -201,6 +246,69 @@ function atualizarDashboard(){
       <td><span class="badge selo-pendente">Em rota</span></td>
       <td><span class="badge selo-presente">${r.alunos}/${r.alunos} confirmados</span></td>
     </tr>`).join('');
+
+  renderGraficosDashboard();
+}
+
+/* Gráficos do painel (Chart.js) — carregado apenas em admin-painel.html */
+function renderGraficosDashboard(){
+  if (typeof Chart === 'undefined') return;
+
+  const corPrimaria = getComputedStyle(document.documentElement).getPropertyValue('--primaria-700').trim();
+  const corPrimariaClara = getComputedStyle(document.documentElement).getPropertyValue('--primaria-100').trim();
+  const corTexto = getComputedStyle(document.documentElement).getPropertyValue('--neutro-600').trim();
+  Chart.defaults.font.family = "'Roboto', system-ui, sans-serif";
+  Chart.defaults.color = corTexto;
+
+  const canvasLinha = document.getElementById('grafico-presenca-semana');
+  if (canvasLinha && !canvasLinha.dataset.montado){
+    canvasLinha.dataset.montado = '1';
+    new Chart(canvasLinha, {
+      type: 'line',
+      data: {
+        labels: DB.presencaSemana.map(d => d.dia),
+        datasets: [{
+          label: 'Presença (%)',
+          data: DB.presencaSemana.map(d => d.pct),
+          borderColor: corPrimaria,
+          backgroundColor: corPrimariaClara,
+          fill: true,
+          tension: .35,
+          pointRadius: 4,
+          pointBackgroundColor: corPrimaria,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { min: 60, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#F0F2F4' } }, x: { grid: { display: false } } },
+      },
+    });
+  }
+
+  const canvasRotas = document.getElementById('grafico-alunos-rota');
+  if (canvasRotas && !canvasRotas.dataset.montado){
+    canvasRotas.dataset.montado = '1';
+    const cores = ['#0E6B7A', '#1C6888', '#6BBFCC', '#9BA3AE'];
+    new Chart(canvasRotas, {
+      type: 'doughnut',
+      data: {
+        labels: DB.rotas.map(r => r.nome),
+        datasets: [{ data: DB.rotas.map(r => r.alunos), backgroundColor: cores, borderWidth: 0 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: { legend: { display: false } },
+      },
+    });
+
+    const legenda = document.getElementById('legenda-alunos-rota');
+    if (legenda){
+      legenda.innerHTML = DB.rotas.map((r, i) => `
+        <div class="legenda-rota"><span class="ponto" style="background:${cores[i % cores.length]}"></span>${r.nome} <strong class="ms-auto">${r.alunos}</strong></div>
+      `).join('');
+    }
+  }
 }
 
 /* ============================================================
