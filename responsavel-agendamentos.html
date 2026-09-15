@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="experiencia">
 
 <div class="app-shell" id="app-shell">
 
@@ -33,14 +33,12 @@
       <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral"></nav>
 
       <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo">
-
-        <div class="cabecalho-secao">
-          <h1>Meus agendamentos</h1>
-          <p class="desc">Confirme ou cancele a utilização do transporte</p>
+        <header class="cabecalho-secao"><div><p class="sobretitulo">Área do aluno e responsável</p><h1>Uma rotina mais tranquila.</h1><p class="desc">Organize o transporte de Ana Beatriz em um só lugar.</p></div><span class="badge selo-info">Demonstração · 21 ago. 2026</span></header>
+        <section class="faixa-viagem"><div class="d-flex justify-content-between align-items-center gap-3 flex-wrap"><div><p class="sobretitulo">Sexta-feira, 21 de agosto</p><h2>O próximo trajeto começa às 06:30</h2><p class="sub mb-0">Jardim das Flores · Turno da manhã</p></div><a class="btn btn-light fw-semibold" href="responsavel-status.html">Acompanhar viagem <i class="bi bi-arrow-right"></i></a></div></section>
+        <div class="row g-4">
+          <section class="col-12 col-xl-8" aria-labelledby="titulo-agenda"><h2 class="bloco-titulo" id="titulo-agenda">Agendamentos de hoje</h2><p class="desc">Confirme a ida e a volta ou avise se não for utilizar o transporte.</p><div class="lista-alunos-viagem" id="lista-agendamentos"></div></section>
+          <aside class="col-12 col-xl-4"><div class="card painel mb-3"><div class="card-body p-4"><p class="sobretitulo">Seu ponto de encontro</p><h2 class="bloco-titulo">Rua das Acácias, 120</h2><p class="desc">Jardim das Flores</p><ol class="itinerario"><li><strong>Embarque no bairro</strong><small>06:30 · Aguarde no ponto combinado</small></li><li><strong>Escola Municipal · Centro</strong><small>07:00 · Chegada prevista</small></li></ol></div></div><div class="nota-viagem"><i class="bi bi-clock"></i><span>Esteja no ponto 5 minutos antes do horário previsto para o embarque.</span></div><a class="acao-rapida mt-3" href="responsavel-historico.html"><span class="icone"><i class="bi bi-clock-history"></i></span><div><div class="titulo">Histórico de viagens</div><div class="sub">Consulte os trajetos anteriores</div></div><i class="bi bi-chevron-right ms-auto"></i></a></aside>
         </div>
-        <div class="linha-rota"></div>
-        <div class="lista-alunos-viagem" id="lista-agendamentos"></div>
-
       </main>
     </div>
   </div>

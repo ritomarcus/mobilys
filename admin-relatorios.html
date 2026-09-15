@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="cadastros-page relatorios-page">
 
 <div class="app-shell" id="app-shell">
 
@@ -33,25 +33,47 @@
       <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral"></nav>
 
       <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo">
+        <header class="cadastro-intro">
+          <div><p class="sobretitulo">Administração · Mobilys</p><h1>Relatórios do transporte</h1><p class="desc mb-0">Transforme os registros de presença em uma visão clara da operação.</p></div>
+          <span class="badge selo-info">Dados de demonstração</span>
+        </header>
 
-        <div class="cabecalho-secao">
-          <h1>Relatórios</h1>
-          <p class="desc">Geração de relatório de presença dos alunos</p>
-        </div>
-        <div class="linha-rota"></div>
-        <div class="card painel">
-          <div class="card-header painel-cabecalho"><h2 class="m-0">Relatório de presença</h2></div>
-          <div class="card-body">
-            <div class="d-flex flex-wrap gap-2 mb-3">
-              <select class="form-select filtro-select" id="rel-rota"><option value="">Todas as rotas</option></select>
-              <input type="date" class="form-control filtro-select" id="rel-inicio">
-              <input type="date" class="form-control filtro-select" id="rel-fim">
-              <button class="btn btn-primary btn-sm" id="btn-gerar-relatorio">Gerar relatório</button>
+        <section class="card painel rel-configuracao mb-4" aria-labelledby="rel-config-titulo">
+          <div class="cadastro-painel-topo"><div><h2 id="rel-config-titulo">Configure seu relatório</h2><p class="desc mb-0">Escolha o período e os trajetos que deseja analisar.</p></div><span class="rel-tipo"><i class="bi bi-file-earmark-bar-graph" aria-hidden="true"></i> Relatório de presenças</span></div>
+          <form id="rel-form">
+            <div class="rel-filtros">
+              <div><label class="form-label" for="rel-inicio">Data inicial <span aria-hidden="true">*</span></label><input type="date" class="form-control" id="rel-inicio" required></div>
+              <div><label class="form-label" for="rel-fim">Data final <span aria-hidden="true">*</span></label><input type="date" class="form-control" id="rel-fim" required></div>
+              <div><label class="form-label" for="rel-rota">Rota</label><select class="form-select" id="rel-rota"><option value="">Todas as rotas</option></select></div>
+              <div><label class="form-label" for="rel-turno">Trajeto</label><select class="form-select" id="rel-turno"><option value="">Ida e volta</option><option value="Ida">Somente ida</option><option value="Volta">Somente volta</option></select></div>
             </div>
-            <p class="desc mb-0" id="rel-resultado">Defina o período e clique em "Gerar relatório".</p>
-          </div>
-        </div>
+            <div class="rel-config-rodape"><p class="desc mb-0" id="rel-dados-disponiveis"></p><div class="d-flex gap-2 flex-wrap"><button type="button" class="btn btn-outline-primary" id="rel-restaurar">Usar período de exemplo</button><button type="submit" class="btn btn-primary" id="btn-gerar-relatorio"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Gerar relatório</button></div></div>
+          </form>
+        </section>
 
+        <div id="rel-aviso" class="rel-aviso d-none" role="status"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Filtros alterados. Clique em “Gerar relatório” para atualizar os resultados e liberar a exportação.</span></div>
+        <article id="rel-documento" aria-labelledby="rel-doc-titulo">
+          <header class="rel-documento-topo">
+            <div><p class="sobretitulo">Mobilys · Relatório de presenças</p><h2 id="rel-doc-titulo">Visão geral do período</h2><p class="desc mb-0" id="rel-escopo"></p></div>
+            <div class="rel-exportar"><button type="button" class="btn btn-outline-primary" id="rel-csv" disabled><i class="bi bi-download" aria-hidden="true"></i>Exportar CSV</button><button type="button" class="btn btn-outline-primary" id="rel-imprimir" disabled><i class="bi bi-printer" aria-hidden="true"></i>Imprimir / PDF</button></div>
+          </header>
+          <p class="rel-atualizacao" id="rel-resultado" role="status"></p>
+          <section class="presencas-resumo" aria-label="Indicadores do relatório">
+            <div class="presenca-indicador"><span class="presenca-icone"><i class="bi bi-journal-check" aria-hidden="true"></i></span><div><span>Registros analisados</span><strong id="rel-total">—</strong><small>Uma ida ou volta por aluno</small></div></div>
+            <div class="presenca-indicador"><span class="presenca-icone"><i class="bi bi-person-check" aria-hidden="true"></i></span><div><span>Presenças</span><strong id="rel-presentes">—</strong><small>Embarques registrados</small></div></div>
+            <div class="presenca-indicador"><span class="presenca-icone neutra"><i class="bi bi-person-dash" aria-hidden="true"></i></span><div><span>Ausências</span><strong id="rel-ausentes">—</strong><small>Alunos que não embarcaram</small></div></div>
+            <div class="presenca-indicador"><span class="presenca-icone"><i class="bi bi-pie-chart" aria-hidden="true"></i></span><div><span>Taxa de presença</span><strong id="rel-taxa">—</strong><small>Presenças ÷ registros</small></div></div>
+          </section>
+
+          <section class="card painel mb-4" aria-labelledby="rel-rotas-titulo"><div class="cadastro-painel-topo"><div><h2 id="rel-rotas-titulo">Presença por rota</h2><p class="desc mb-0">Compare a participação nos trajetos do período selecionado.</p></div><span class="badge selo-info" id="rel-rotas-contagem"></span></div><div id="rel-rotas" class="rel-rotas"></div></section>
+
+          <section class="card painel" aria-labelledby="rel-registros-titulo">
+            <div class="cadastro-painel-topo"><div><h2 id="rel-registros-titulo">Detalhamento dos registros</h2><p class="desc mb-0">Os mesmos dados são incluídos no arquivo CSV e na impressão.</p></div></div>
+            <div class="card-body p-0 tabela-scroll"><table class="table table-hover align-middle mb-0"><caption class="visually-hidden">Registros incluídos no relatório de presenças</caption><thead><tr><th scope="col">Aluno</th><th scope="col">Data</th><th scope="col">Rota</th><th scope="col">Trajeto</th><th scope="col">Situação</th></tr></thead><tbody id="rel-registros"></tbody></table></div>
+            <div class="cadastro-painel-rodape"><span id="rel-contagem"></span><span>Dados simulados · Mobilys</span></div>
+          </section>
+          <p class="cadastro-ajuda"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Cada registro representa um aluno em um trajeto. Na impressão, escolha “Salvar como PDF” para guardar uma cópia do relatório.</span></p>
+        </article>
       </main>
     </div>
   </div>

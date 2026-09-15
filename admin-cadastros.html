@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="cadastros-page">
 
 <div class="app-shell" id="app-shell">
 
@@ -34,31 +34,34 @@
 
       <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo">
 
-        <div class="cabecalho-secao">
-          <h1>Cadastros</h1>
-          <p class="desc">Gestão de alunos, rotas, motoristas, veículos e usuários</p>
-        </div>
-        <div class="linha-rota"></div>
+        <header class="cadastro-intro">
+          <div><p class="sobretitulo">Administração · Mobilys</p><h1>Uma base bem organizada.</h1>
+          <p class="desc mb-0">Gerencie as pessoas, as rotas e os veículos do transporte estudantil.</p></div>
+          <span class="badge selo-info">Dados de demonstração</span>
+        </header>
 
-        <div class="d-flex flex-wrap gap-2 mb-3" id="abas-cadastro" role="tablist"></div>
+        <div class="cadastro-categorias" id="abas-cadastro" role="tablist" aria-label="Tipos de cadastro"></div>
 
-        <div class="d-flex flex-wrap gap-2 mb-3">
-          <div class="flex-grow-1 busca" style="min-width:160px;">
-            <input type="search" class="form-control" id="busca-cadastro" placeholder="Buscar...">
+        <section class="card painel" id="painel-cadastro" role="tabpanel" aria-labelledby="aba-alunos">
+          <div class="cadastro-painel-topo">
+            <div><h2 id="cadastro-titulo">Alunos</h2><p class="desc mb-0" id="cadastro-descricao"></p></div>
+            <button class="btn btn-primary" id="btn-novo-cadastro"><i class="bi bi-plus-lg"></i><span>Novo aluno</span></button>
           </div>
-          <button class="btn btn-primary d-flex align-items-center gap-1" id="btn-novo-cadastro">
-            <i class="bi bi-plus-lg"></i> Novo
-          </button>
-        </div>
-
-        <div class="card painel">
+          <div class="cadastro-filtros">
+            <div class="cadastro-busca"><label for="busca-cadastro" class="form-label">Buscar registro</label><div class="position-relative"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control" id="busca-cadastro" placeholder="Buscar por nome, matrícula ou responsável"></div></div>
+            <div><label for="filtro-cadastro" class="form-label" id="filtro-cadastro-label">Rota</label><select class="form-select" id="filtro-cadastro"></select></div>
+            <div><label for="ordem-cadastro" class="form-label">Ordenar por</label><select class="form-select" id="ordem-cadastro"><option value="az">Nome: A–Z</option><option value="za">Nome: Z–A</option><option value="recentes">Mais recentes</option></select></div>
+          </div>
           <div class="card-body p-0 tabela-scroll">
             <table class="table table-hover align-middle mb-0">
+              <caption class="visually-hidden" id="cadastro-caption">Lista de alunos</caption>
               <thead id="cabecalho-tabela-cadastro"></thead>
               <tbody id="corpo-tabela-cadastro"></tbody>
             </table>
           </div>
-        </div>
+          <div class="cadastro-painel-rodape"><span id="cadastro-contagem" role="status"></span><button type="button" class="btn btn-link btn-sm" id="limpar-filtros-cadastro">Limpar filtros</button></div>
+        </section>
+        <p class="cadastro-ajuda"><i class="bi bi-info-circle"></i><span id="cadastro-ajuda">Associe cada aluno à sua rota no formulário de cadastro.</span></p>
 
       </main>
     </div>
@@ -69,16 +72,18 @@
 </div>
 
 <!-- Modal Bootstrap (cadastro / edição / associação) -->
-<div class="modal fade" id="modal-cadastro" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="modal-cadastro" tabindex="-1" aria-hidden="true" aria-labelledby="modal-titulo" aria-describedby="modal-descricao">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title h5 m-0" id="modal-titulo">Novo registro</h2>
+        <div><p class="sobretitulo mb-1">Central de cadastros</p><h2 class="modal-title h5 m-0" id="modal-titulo">Novo registro</h2></div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
+        <p class="desc" id="modal-descricao">Preencha os dados abaixo. Os campos com * são obrigatórios.</p>
         <form id="modal-form"></form>
       </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancelar</button><button type="submit" form="modal-form" class="btn btn-primary" id="modal-salvar">Salvar cadastro</button></div>
     </div>
   </div>
 </div>

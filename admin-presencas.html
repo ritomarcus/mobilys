@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="cadastros-page presencas-page">
 
 <div class="app-shell" id="app-shell">
 
@@ -33,30 +33,42 @@
       <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral"></nav>
 
       <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo">
+        <header class="cadastro-intro">
+          <div><p class="sobretitulo">Administração · Mobilys</p><h1>Histórico de presenças</h1><p class="desc mb-0">Acompanhe os embarques e as ausências em cada trajeto.</p></div>
+          <span class="badge selo-info">Dados de demonstração · Agosto 2026</span>
+        </header>
 
-        <div class="cabecalho-secao">
-          <h1>Histórico de presenças</h1>
-          <p class="desc">Consulta de presença dos alunos por viagem (ida e volta)</p>
-        </div>
-        <div class="linha-rota"></div>
-        <div class="d-flex flex-wrap gap-2 mb-3">
-          <select class="form-select filtro-select" id="f-presenca-rota"><option value="">Todas as rotas</option></select>
-          <select class="form-select filtro-select" id="f-presenca-turno">
-            <option value="">Ida e volta</option>
-            <option value="ida">Somente ida</option>
-            <option value="volta">Somente volta</option>
-          </select>
-          <input type="date" class="form-control filtro-select" id="f-presenca-data">
-        </div>
-        <div class="card painel">
+        <section aria-label="Resumo dos registros filtrados" class="presencas-resumo">
+          <div class="presenca-indicador"><span class="presenca-icone"><i class="bi bi-journal-check" aria-hidden="true"></i></span><div><span>Registros encontrados</span><strong id="hp-total">5</strong><small>Nos filtros selecionados</small></div></div>
+          <div class="presenca-indicador"><span class="presenca-icone"><i class="bi bi-person-check" aria-hidden="true"></i></span><div><span>Presenças</span><strong id="hp-presentes">4</strong><small>Embarques registrados</small></div></div>
+          <div class="presenca-indicador"><span class="presenca-icone neutra"><i class="bi bi-person-dash" aria-hidden="true"></i></span><div><span>Ausências</span><strong id="hp-ausentes">1</strong><small>Alunos que não embarcaram</small></div></div>
+          <div class="presenca-indicador"><span class="presenca-icone"><i class="bi bi-bar-chart" aria-hidden="true"></i></span><div><span>Taxa de presença</span><strong id="hp-taxa">80%</strong><small>Presenças ÷ registros</small></div></div>
+        </section>
+
+        <section class="card painel" aria-labelledby="hp-titulo">
+          <div class="cadastro-painel-topo">
+            <div><h2 id="hp-titulo">Registros de embarque</h2><p class="desc mb-0">Consulte por aluno, rota, trajeto, data ou situação.</p></div>
+            <span class="presenca-periodo"><i class="bi bi-calendar3" aria-hidden="true"></i><span id="hp-periodo">20 a 21 ago. 2026</span></span>
+          </div>
+          <div class="presencas-filtros">
+            <div class="cadastro-busca"><label class="form-label" for="f-presenca-busca">Buscar aluno</label><div class="position-relative"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control" id="f-presenca-busca" placeholder="Digite o nome do aluno"></div></div>
+            <div><label class="form-label" for="f-presenca-rota">Rota</label><select class="form-select" id="f-presenca-rota"><option value="">Todas as rotas</option></select></div>
+            <div><label class="form-label" for="f-presenca-turno">Trajeto</label><select class="form-select" id="f-presenca-turno"><option value="">Ida e volta</option><option value="ida">Somente ida</option><option value="volta">Somente volta</option></select></div>
+            <div><label class="form-label" for="f-presenca-data">Data do embarque</label><input type="date" class="form-control" id="f-presenca-data"></div>
+            <div><label class="form-label" for="f-presenca-status">Situação</label><select class="form-select" id="f-presenca-status"><option value="">Todas as situações</option><option value="presente">Presente</option><option value="ausente">Ausente</option></select></div>
+            <div><label class="form-label" for="f-presenca-ordem">Ordenar por</label><select class="form-select" id="f-presenca-ordem"><option value="recentes">Mais recentes</option><option value="antigos">Mais antigos</option><option value="aluno">Aluno: A–Z</option></select></div>
+          </div>
+          <div class="presencas-resultado"><span id="hp-filtros-resumo">Exibindo todos os registros</span><button class="btn btn-link btn-sm" type="button" id="hp-limpar">Limpar filtros</button></div>
           <div class="card-body p-0 tabela-scroll">
             <table class="table table-hover align-middle mb-0">
-              <thead><tr><th>Data</th><th>Aluno</th><th>Rota</th><th>Turno</th><th>Status</th></tr></thead>
+              <caption class="visually-hidden">Histórico de presença dos alunos, conforme os filtros selecionados</caption>
+              <thead><tr><th scope="col">Aluno</th><th scope="col">Data</th><th scope="col">Rota</th><th scope="col">Trajeto</th><th scope="col">Situação</th></tr></thead>
               <tbody id="tabela-historico-presencas"></tbody>
             </table>
           </div>
-        </div>
-
+          <div class="cadastro-painel-rodape"><span id="hp-contagem" role="status"></span><span class="desc">Histórico de ida e volta</span></div>
+        </section>
+        <p class="cadastro-ajuda"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Os indicadores acompanham os filtros. Cada registro corresponde a um aluno em um trajeto; ida e volta são contabilizadas separadamente.</span></p>
       </main>
     </div>
   </div>
