@@ -588,3 +588,70 @@ h1,h2,h3,h4{ font-weight:700; letter-spacing:-.01em; }
   .relatorios-page .cadastro-vinculo,.relatorios-page .badge{ font-size:10px; }
   .relatorios-page .progress{ print-color-adjust:exact; -webkit-print-color-adjust:exact; }
 }
+
+/* Cabeçalho compartilhado: contexto da tela e conta, preservando os menus existentes. */
+:root{ --barra-inferior:calc(64px + env(safe-area-inset-bottom, 0px)); --topo:calc(64px + env(safe-area-inset-top, 0px)); }
+.topo-navbar{ padding-top:calc(4px + env(safe-area-inset-top, 0px)); }
+.topo-navbar .topo-container{ display:flex; flex-wrap:nowrap; gap:16px; padding-inline:max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+.topo-contexto{ display:flex; flex-direction:column; flex:1; min-width:0; border-left:1px solid var(--primaria-300); padding-left:18px; }
+.topo-contexto-sub{ font-size:10px; color:var(--primaria-100); letter-spacing:.06em; }
+.topo-pagina{ font-size:15px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.topo-navbar .topo-usuario-btn{ --bs-btn-color:#fff; --bs-btn-hover-color:#fff; --bs-btn-active-color:#fff; --bs-btn-hover-bg:var(--primaria-900); --bs-btn-active-bg:var(--primaria-900); display:flex; align-items:center; justify-content:center; gap:8px; min-width:44px; min-height:44px; padding:8px 12px; border-radius:10px; }
+.topo-navbar .topo-usuario-btn:hover,.topo-navbar .topo-usuario-btn.show{ background:var(--primaria-900); color:#fff; }
+.topo-conta-icone{ font-size:20px; }
+.topo-conta-menu{ min-width:240px; max-width:calc(100vw - 32px); border:1px solid var(--neutro-100); border-radius:12px; padding:8px; }
+.topo-conta-menu .dropdown-item{ min-height:44px; border-radius:8px; font-size:14px; }
+.topo-conta-menu .dropdown-item:focus,.topo-conta-menu .dropdown-item:hover{ background:var(--primaria-100); color:var(--primaria-900); }
+.topo-conta-menu .dropdown-item:active{ background:var(--primaria-700); color:#fff; }
+.topo-conta-resumo{ padding:10px 12px; }
+.topo-conta-resumo strong,.topo-conta-resumo span{ display:block; }
+.topo-conta-resumo strong{ font-size:14px; color:var(--primaria-900); }
+.topo-conta-resumo span{ font-size:12px; color:var(--neutro-600); margin-top:4px; }
+.pular-conteudo{ position:fixed; top:-100px; left:16px; z-index:1100; padding:12px 18px; border-radius:8px; background:#fff; color:var(--primaria-900); }
+.pular-conteudo:focus{ top:8px; }
+.nav-inferior{ padding-bottom:env(safe-area-inset-bottom, 0px); }
+.nav-inferior .nav-item-mobilys{ border-top:3px solid transparent; }
+.nav-inferior .nav-item-mobilys.ativo{ border-top-color:var(--primaria-700); background:var(--primaria-100); }
+@media(max-width:575.98px){
+  .topo-navbar .topo-container{ gap:12px; }
+  .topo-contexto{ padding-left:12px; }
+  .topo-contexto-sub{ display:none; }
+  .topo-navbar .topo-cargo,.topo-navbar .topo-usuario-btn::after{ display:none; }
+  .topo-navbar .topo-usuario-btn{ width:44px; padding:0; }
+}
+@media print{ .pular-conteudo{ display:none; } }
+/* As rotas revelam o itinerário dentro da própria lista. */
+.rota-resumo{ cursor:pointer; }
+.rota-expandir{ display:flex; flex-direction:column; gap:10px; width:100%; min-height:44px; padding:0; border:0; background:transparent; color:var(--primaria-900); text-align:left; border-radius:8px; }
+.rota-expandir-indicador{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:500; color:var(--primaria-700); }
+.rota-expandir[aria-expanded="true"] .bi-chevron-down{ transform:rotate(180deg); }
+.cadastros-page .table .rota-aberta>td{ background:var(--primaria-100); }
+.cadastros-page .table tr.rota-expansao[hidden]{ display:none; }
+.cadastros-page .table tr.rota-expansao{ cursor:default; padding:0; }
+.cadastros-page .table tr.rota-expansao>td{ padding:0; margin:0; background:#fff; box-shadow:none; }
+.rota-expansao .painel{ border:0; border-left:3px solid var(--primaria-300); border-radius:0; box-shadow:none; margin-bottom:0 !important; }
+@media(max-width:575.98px){
+  .cadastros-page .table tr.rota-expansao>td{ display:block; }
+  .cadastros-page .table .rota-aberta{ background:var(--primaria-100); }
+}
+/* Acompanhamento horizontal dos pontos, como etapas de uma entrega. */
+.timeline-scroll{ overflow-x:auto; margin:24px 0; padding:8px 0 16px; scrollbar-width:thin; scrollbar-color:var(--primaria-300) var(--neutro-50); border-radius:8px; }
+.timeline-embarques{ position:relative; display:flex; list-style:none; padding:0; margin:0; min-width:100%; width:max-content; }
+.timeline-embarques li{ position:relative; display:flex; flex:1 0 138px; flex-direction:column; align-items:center; text-align:center; padding:0 12px; width:138px; max-width:200px; }
+.timeline-embarques li:not(:first-child)::before{ content:''; position:absolute; top:15px; left:-50%; width:100%; height:2px; background:var(--neutro-100); }
+.timeline-embarques li.concluida::before,.timeline-embarques li.atual::before{ background:var(--primaria-700); }
+.timeline-marcador{ position:relative; width:32px; height:32px; border-radius:50%; background:var(--neutro-100); color:var(--neutro-600); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; font-size:12px; z-index:1; border:4px solid var(--neutro-50); }
+.timeline-embarques .concluida .timeline-marcador{ background:var(--primaria-700); color:#fff; }
+.timeline-embarques .atual .timeline-marcador{ background:var(--primaria-700); color:#fff; box-shadow:0 0 0 3px var(--primaria-100); }
+.timeline-embarques .em-transito .timeline-marcador{ background:var(--neutro-100); color:var(--neutro-600); box-shadow:none; }
+.timeline-embarques li.em-transito::before{ background:linear-gradient(to right,var(--primaria-700) 50%,var(--neutro-100) 50%); }
+.timeline-onibus{ position:absolute; left:0; top:0; transform:translateX(-50%); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:4px solid var(--neutro-50); border-radius:50%; background:var(--primaria-700); color:#fff; box-shadow:0 0 0 3px var(--primaria-100); z-index:2; font-size:12px; }
+.timeline-embarques li:first-child .timeline-onibus{ left:19px; }
+.timeline-embarques strong{ display:block; color:var(--neutro-600); font-size:12px; line-height:1.45; min-height:52px; max-width:100%; overflow-wrap:anywhere; }
+.timeline-embarques .atual strong,.timeline-embarques .concluida strong{ color:var(--primaria-900); }
+.timeline-horario{ display:block; font-size:11px; color:var(--neutro-600); margin:12px 0 6px; white-space:nowrap; }
+.timeline-estado{ display:inline-block; font-size:10px; font-weight:700; padding:4px 7px; border-radius:6px; margin-top:8px; background:var(--neutro-50); color:var(--neutro-600); }
+.timeline-embarques .atual .timeline-estado,.timeline-embarques .concluida .timeline-estado{ background:var(--primaria-100); color:var(--primaria-700); }
+.timeline-embarques .timeline-sem-rota{ width:100%; max-width:none; text-align:left; align-items:flex-start; }
+.timeline-sem-rota strong{ min-height:0; }
+.timeline-sem-rota small{ font-size:12px; color:var(--neutro-600); }
