@@ -7,8 +7,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/refinamentos.css">
 </head>
-<body class="experiencia">
+<body class="experiencia aluno-page">
 
 <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
 <div class="app-shell" id="app-shell">
@@ -40,8 +41,9 @@
 
       <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1">
         <header class="cabecalho-secao"><div><p class="sobretitulo">Área do aluno e responsável</p><h1>Suas viagens, organizadas.</h1><p class="desc">Consulte o histórico de transporte de Ana Beatriz.</p></div><span class="badge selo-info">Dados de demonstração · Agosto 2026</span></header>
-        <div class="resumo-grade"><div class="resumo-item"><i class="bi bi-calendar2-check"></i><div><strong id="rh-total">3</strong><span>Agendamentos</span></div></div><div class="resumo-item"><i class="bi bi-bus-front"></i><div><strong id="rh-utilizados">2</strong><span>Trajetos utilizados</span></div></div><div class="resumo-item"><i class="bi bi-calendar-x"></i><div><strong id="rh-cancelados">1</strong><span>Cancelamentos</span></div></div></div>
-        <section class="card painel"><div class="card-header painel-cabecalho"><h2 class="m-0">Histórico de utilizações</h2></div><div class="card-body border-bottom"><div class="row g-3 align-items-end"><div class="col-sm-5"><label class="form-label small fw-semibold" for="rh-situacao">Situação</label><select class="form-select" id="rh-situacao"><option value="">Todas as situações</option><option>Utilizado</option><option>Cancelado</option></select></div><div class="col-sm-5"><label class="form-label small fw-semibold" for="rh-turno">Trajeto</label><select class="form-select" id="rh-turno"><option value="">Ida e volta</option><option>Ida</option><option>Volta</option></select></div><div class="col-sm-2"><button class="btn btn-outline-primary w-100" id="rh-limpar">Limpar</button></div></div></div><div class="card-body p-0 tabela-scroll"><table class="table table-hover align-middle mb-0"><caption class="visually-hidden">Viagens de Ana Beatriz em agosto de 2026</caption><thead><tr><th scope="col">Data</th><th scope="col">Rota</th><th scope="col">Trajeto</th><th scope="col">Situação</th></tr></thead><tbody id="tabela-historico-resp"></tbody></table></div><div class="card-footer bg-transparent desc" id="rh-contagem" aria-live="polite"></div></section>
+<section class="aluno-identidade" aria-label="Aluno vinculado"><span class="avatar-perfil" aria-hidden="true">AB</span><div><strong>Ana Beatriz Souza</strong><span>Matrícula 2026001 · Manhã</span></div><span class="aluno-rota"><i class="bi bi-bus-front" aria-hidden="true"></i> Rota 10 · São João da Boa Vista</span></section>
+        <p class="desc">Resumo dos resultados conforme os filtros selecionados.</p><div class="resumo-grade"><div class="resumo-item"><i class="bi bi-calendar2-check"></i><div><strong id="rh-total">3</strong><span>Trajetos encontrados</span></div></div><div class="resumo-item"><i class="bi bi-bus-front"></i><div><strong id="rh-utilizados">2</strong><span>Trajetos utilizados</span></div></div><div class="resumo-item"><i class="bi bi-calendar-x"></i><div><strong id="rh-cancelados">1</strong><span>Cancelamentos</span></div></div></div>
+        <section class="card painel"><div class="card-header painel-cabecalho"><div class="familia-historico-topo"><h2 class="m-0">Histórico de utilizações</h2><div><label class="visually-hidden" for="rh-ordem">Ordenar por data</label><select class="form-select" id="rh-ordem"><option value="recentes">Mais recentes primeiro</option><option value="antigos">Mais antigos primeiro</option></select></div></div></div><div class="card-body border-bottom"><div class="row g-3 align-items-end"><div class="col-sm-6 col-xl-3"><label class="form-label small fw-semibold" for="rh-situacao">Situação</label><select class="form-select" id="rh-situacao"><option value="">Todas as situações</option><option>Utilizado</option><option>Cancelado</option><option>Ausente</option><option>Aguardando registro</option></select></div><div class="col-sm-6 col-xl-3"><label class="form-label small fw-semibold" for="rh-turno">Trajeto</label><select class="form-select" id="rh-turno"><option value="">Ida e volta</option><option>Ida</option><option>Volta</option></select></div><div class="col-sm-6 col-xl-3"><label class="form-label small fw-semibold" for="rh-data">Data da viagem</label><input type="date" class="form-control" id="rh-data"></div><div class="col-sm-6 col-xl-3"><button class="btn btn-outline-primary w-100" id="rh-limpar">Limpar</button></div></div></div><div class="card-body p-0 tabela-scroll"><table class="table table-hover align-middle mb-0"><caption class="visually-hidden">Viagens de Ana Beatriz</caption><thead><tr><th scope="col">Data</th><th scope="col">Rota</th><th scope="col">Trajeto</th><th scope="col">Situação</th></tr></thead><tbody id="tabela-historico-resp"></tbody></table></div><div class="card-footer bg-transparent desc" id="rh-contagem" aria-live="polite"></div></section>
       </main>
     </div>
   </div>
@@ -61,6 +63,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="js/rotas.js"></script>
+<script src="js/dados.js"></script>
 <script src="js/app.js"></script>
 <script>iniciarPagina('resp-historico');</script>
 </body>

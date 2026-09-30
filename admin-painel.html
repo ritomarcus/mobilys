@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/refinamentos.css">
 </head>
 <body>
 
@@ -104,16 +105,16 @@
         </div>
 
         <!-- Gráficos -->
-        <p class="desc"><i class="bi bi-info-circle me-1"></i>Dados de demonstração · Registros de agosto de 2026</p>
+        <p class="desc"><i class="bi bi-info-circle me-1"></i>Registros de presença salvos neste navegador</p>
         <div class="row g-3 mb-3">
           <div class="col-12 col-lg-7">
             <div class="card painel h-100">
               <div class="card-header painel-cabecalho">
-                <h2 class="m-0">Presença ao longo da semana</h2>
+                <h2 class="m-0">Presença por data</h2>
               </div>
               <div class="card-body">
-                <div class="grafico-caixa"><canvas id="grafico-presenca-semana" role="img" aria-label="Presença semanal: segunda 88%, terça 92%, quarta 85%, quinta 94%, sexta 80%, sábado 96%."></canvas></div>
-                <details class="grafico-dados"><summary>Consultar valores do gráfico</summary><p class="mt-2 mb-0">Seg: 88% · Ter: 92% · Qua: 85% · Qui: 94% · Sex: 80% · Sáb: 96%</p></details>
+                <div class="grafico-caixa"><canvas id="grafico-presenca-semana" role="img" aria-label="Presença por data. Consulte os valores abaixo."></canvas></div>
+                <details class="grafico-dados"><summary>Consultar valores do gráfico</summary><p class="mt-2 mb-0" id="dados-presenca-periodo"></p></details>
               </div>
             </div>
           </div>
@@ -133,7 +134,7 @@
         <div class="card painel mb-3">
           <div class="card-header painel-cabecalho"><h2 class="m-0">Presenças por rota</h2></div>
           <div class="card-body">
-            <p class="desc">Comparação dos registros de exemplo de 20 e 21 de agosto.</p>
+            <p class="desc">Comparação dos registros salvos nesta demonstração.</p>
             <div class="grafico-caixa"><canvas id="grafico-presencas-rota" role="img" aria-label="Presenças e ausências por rota. Valores disponíveis abaixo."></canvas></div>
             <details class="grafico-dados"><summary>Consultar valores do gráfico</summary><div id="dados-presencas-rota" class="mt-2"></div></details>
           </div>
@@ -146,7 +147,7 @@
           </div>
           <div class="card-body p-0 tabela-scroll">
             <table class="table table-hover align-middle mb-0">
-              <thead><tr><th>Rota</th><th>Motorista</th><th>Turno</th><th>Status</th><th>Presença</th></tr></thead>
+              <thead><tr><th>Rota</th><th>Motorista</th><th>Trajeto</th><th>Status</th><th>Confirmados</th></tr></thead>
               <tbody id="tabela-viagens-hoje"></tbody>
             </table>
           </div>
@@ -174,6 +175,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="js/rotas.js"></script>
+<script src="js/dados.js"></script>
 <script src="js/app.js"></script>
 <script>iniciarPagina('admin-dashboard');</script>
 </body>

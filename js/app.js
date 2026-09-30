@@ -1,6 +1,6 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    MOBILYS — app.js
-   Protótipo funcional em memória (sem backend) cobrindo os casos de uso
+   Protótipo funcional com armazenamento local (sem backend) cobrindo os casos de uso
    do diagrama: Administrador, Motorista e Aluno/Responsável.
    Usa componentes do Bootstrap 5 (Modal, Toast, Dropdown) via bootstrap.bundle.js.
    ========================================================================== */
@@ -18,7 +18,7 @@ const ICONE = {
 };
 
 /* --------------------------- Dados simulados (em memória) --------------------------- */
-const DB = {
+const DADOS_INICIAIS = {
   alunos: [
     { id: 1, nome: 'Ana Beatriz Souza', matricula: '2026001', turma: 'Manhã', rota: 'Rota 10 — São João da Boa Vista', responsavel: 'Marcos Souza' },
     { id: 2, nome: 'Pedro Henrique Lima', matricula: '2026002', turma: 'Manhã', rota: 'Rota 10 — São João da Boa Vista', responsavel: 'Carla Lima' },
@@ -42,11 +42,11 @@ const DB = {
     { id: 3, nome: 'Marcos Souza', email: 'marcos@mobilys.com.br', perfil: 'Aluno/Responsável' },
   ],
   historicoPresencas: [
-    { data: '21/08/2026', aluno: 'Ana Beatriz Souza', rota: 'Rota 10 — São João da Boa Vista', turno: 'Ida', status: 'presente' },
-    { data: '21/08/2026', aluno: 'Pedro Henrique Lima', rota: 'Rota 10 — São João da Boa Vista', turno: 'Ida', status: 'ausente' },
-    { data: '21/08/2026', aluno: 'Sofia Martins', rota: 'Rota 11 — São João da Boa Vista', turno: 'Volta', status: 'presente' },
-    { data: '20/08/2026', aluno: 'Lucas Andrade', rota: 'Rota 11 — São João da Boa Vista', turno: 'Ida', status: 'presente' },
-    { data: '20/08/2026', aluno: 'Maria Clara Ferreira', rota: 'Rota 10 — São João da Boa Vista', turno: 'Volta', status: 'presente' },
+    { aluno: 'Ana Beatriz Souza', rota: 'Rota 10 — São João da Boa Vista', turno: 'Ida', status: 'presente' },
+    { aluno: 'Pedro Henrique Lima', rota: 'Rota 10 — São João da Boa Vista', turno: 'Ida', status: 'ausente' },
+    { aluno: 'Sofia Martins', rota: 'Rota 11 — São João da Boa Vista', turno: 'Volta', status: 'presente' },
+    { aluno: 'Lucas Andrade', rota: 'Rota 11 — São João da Boa Vista', turno: 'Ida', status: 'presente' },
+    { aluno: 'Maria Clara Ferreira', rota: 'Rota 10 — São João da Boa Vista', turno: 'Volta', status: 'presente' },
   ],
   presencaSemana: [
     { dia: 'Seg', pct: 88 }, { dia: 'Ter', pct: 92 }, { dia: 'Qua', pct: 85 },
@@ -54,33 +54,71 @@ const DB = {
   ],
 };
 
-/* Estado da viagem do motorista */
-const viagem = {
-  status: 'nao-iniciada', // nao-iniciada | em-andamento | encerrada
-  statusPorTurno: { ida: 'nao-iniciada', volta: 'nao-iniciada' },
-  turno: 'ida',
-  rotaId: 10,
-  progressoPorTurno: { ida: { pontoAtual: 0, noPonto: false }, volta: { pontoAtual: 0, noPonto: false } },
-  pontoAtual: 0,
-  noPonto: false,
-  alunos: [
-    { id: 1, nome: 'Ana Beatriz Souza', pontoIndice: 0, ponto: 'Bairro Citta (Caixa d’água)', ida: null, volta: null },
-    { id: 2, nome: 'Pedro Henrique Lima', pontoIndice: 1, ponto: 'Praça Mário Covas (Supermercado Paraíso)', ida: null, volta: null },
-    { id: 5, nome: 'Maria Clara Ferreira', pontoIndice: 2, ponto: 'Rua Wilson Barbosa Braga (Mercado do Povo)', ida: null, volta: null },
-  ],
+/* As páginas compartilham a mesma demonstração neste navegador/origem. */
+const armazenamento = {
+  getItem: chave => window.localStorage.getItem(chave),
+  setItem: (chave, valor) => window.localStorage.setItem(chave, valor),
+  removeItem: chave => window.localStorage.removeItem(chave),
 };
+const dadosMobilys = criarDadosMobilys(DADOS_INICIAIS, armazenamento);
+const DB = dadosMobilys.db;
+let viagem = { rotaId: 10, turno: 'ida' };
+let agendamentos = [];
+let paginaAtual = '';
+let alteracaoEmCurso = false;
 
-/* Agendamentos do Aluno/Responsável logado */
-const agendamentos = [
-  { id: 1, nome: 'Ana Beatriz Souza', rota: 'Rota 10 — São João da Boa Vista', ida: 'confirmado', volta: 'confirmado' },
-];
-
-const historicoResp = [
-  { data: '21/08/2026', rota: 'Rota 10 — São João da Boa Vista', turno: 'Ida', situacao: 'Utilizado' },
-  { data: '20/08/2026', rota: 'Rota 10 — São João da Boa Vista', turno: 'Volta', situacao: 'Cancelado' },
-  { data: '19/08/2026', rota: 'Rota 10 — São João da Boa Vista', turno: 'Ida', situacao: 'Utilizado' },
-];
-
+function sincronizarViagem(){
+  const atual = dadosMobilys.viagem(viagem.rotaId, viagem.turno);
+  viagem = { ...atual, alunos: atual.alunos.map(a => ({ ...a, [atual.turno]: a.status })) };
+}
+function atualizarAgenda(){
+  const agenda = dadosMobilys.agenda(1);
+  agendamentos = agenda ? [agenda] : [];
+  return agenda;
+}
+async function executarAlteracao(acao, sucesso){
+  if (alteracaoEmCurso) return false;
+  alteracaoEmCurso = true;
+  const executar = () => { acao(); };
+  try {
+    if (navigator.locks) await navigator.locks.request(dadosMobilys.chave, executar);
+    else executar();
+    renderPaginaAtual();
+    if (sucesso) mostrarToast(sucesso);
+    return true;
+  } catch (erro) {
+    dadosMobilys.atualizar();
+    renderPaginaAtual();
+    mostrarToast(escaparHTML(erro.message), false);
+    return false;
+  } finally { alteracaoEmCurso = false; }
+}
+function renderPaginaAtual(){
+  atualizarAgenda();
+  atualizarIdentidadeAluno();
+  if (paginaAtual === 'admin-dashboard') atualizarDashboard();
+  if (paginaAtual === 'admin-cadastros') montarAbasCadastro();
+  if (paginaAtual === 'admin-presencas') renderHistoricoPresencas();
+  if (paginaAtual === 'admin-relatorios') { preencherFiltroRotas(); atualizarEstadoRelatorio(); }
+  if (paginaAtual === 'motorista-viagem') renderViagem();
+  if (paginaAtual === 'resp-agendamentos') renderAgendamentos();
+  if (paginaAtual === 'resp-status') renderStatusViagem();
+  if (paginaAtual === 'resp-historico') renderHistoricoResp();
+}
+function atualizarIdentidadeAluno(){
+  const aluno = DB.alunos.find(a => a.id === 1);
+  const identidade = document.querySelector('.aluno-identidade');
+  if (!identidade) return;
+  identidade.querySelector('strong').textContent = aluno?.nome || 'Aluno não cadastrado';
+  identidade.querySelector('div > span').textContent = aluno ? 'Matrícula ' + aluno.matricula + ' · ' + aluno.turma : '';
+  identidade.querySelector('.aluno-rota').textContent = aluno?.rota || 'Sem rota associada';
+}
+window.addEventListener('storage', evento => {
+  if (evento.key !== dadosMobilys.chave && evento.key !== null) return;
+  if (dadosMobilys.atualizar()) renderPaginaAtual();
+  else mostrarToast(dadosMobilys.erro, false);
+});
+atualizarAgenda();
 /* --------------------------- Navegação por perfil --------------------------- */
 const NAV = {
   admin: [
@@ -129,9 +167,14 @@ const toastMobilys = elToast ? new bootstrap.Toast(elToast, { delay: 2800 }) : n
 const formLogin = document.getElementById('form-login');
 if (formLogin){
   document.querySelectorAll('.perfil-opcao').forEach(btn => {
+    btn.setAttribute('aria-pressed', String(btn.classList.contains('ativo')));
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.perfil-opcao').forEach(b => b.classList.remove('ativo'));
+      document.querySelectorAll('.perfil-opcao').forEach(b => {
+        b.classList.remove('ativo');
+        b.setAttribute('aria-pressed', 'false');
+      });
       btn.classList.add('ativo');
+      btn.setAttribute('aria-pressed', 'true');
     });
   });
 
@@ -151,6 +194,8 @@ if (formLogin){
     btnOlho.addEventListener('click', () => {
       const visivel = inSenha.type === 'text';
       inSenha.type = visivel ? 'password' : 'text';
+      btnOlho.setAttribute('aria-label', visivel ? 'Mostrar senha' : 'Ocultar senha');
+      btnOlho.setAttribute('aria-pressed', String(!visivel));
       iconeOlho.classList.toggle('bi-eye', visivel);
       iconeOlho.classList.toggle('bi-eye-slash', !visivel);
     });
@@ -184,12 +229,14 @@ function montarNavegacao(perfil, viewAtual){
   const lateral = document.getElementById('nav-lateral');
   if (inferior) inferior.innerHTML = itens.map(i => linkNavHTML(i, perfil, viewAtual)).join('');
   if (lateral) lateral.innerHTML = itens.map(i => linkNavHTML(i, perfil, viewAtual)).join('');
+  if (lateral) lateral.insertAdjacentHTML('afterbegin', '<p class="nav-grupo-titulo">' + NOME_PERFIL[perfil] + '</p>');
   if (lateral && perfil !== 'admin') lateral.insertAdjacentHTML('afterbegin', `<div class="nav-perfil"><span class="avatar-perfil">${perfil === 'motorista' ? 'CE' : 'AB'}</span><strong>${perfil === 'motorista' ? 'Carlos Eduardo' : 'Ana Beatriz Souza'}</strong><small>${perfil === 'motorista' ? 'Motorista · Rota 10 — São João da Boa Vista' : 'Aluna de demonstração · Manhã'}</small></div>`);
 }
 
 /* Ponto de entrada de cada página interna: lê o perfil pela URL (?perfil=admin|motorista|responsavel),
    monta o cabeçalho/menu e dispara a renderização específica daquela tela. */
 function iniciarPagina(viewAtual){
+  paginaAtual = viewAtual;
   const perfil = PERFIL_POR_VIEW[viewAtual];
 
   const topoCargo = document.getElementById('topo-cargo');
@@ -207,6 +254,30 @@ function iniciarPagina(viewAtual){
   document.querySelectorAll('.link-sair').forEach(a => a.setAttribute('href', 'index.html'));
 
   montarNavegacao(perfil, viewAtual);
+  const voltarTopo = document.createElement('button');
+  voltarTopo.type = 'button';
+  voltarTopo.className = 'voltar-topo';
+  voltarTopo.hidden = true;
+  voltarTopo.setAttribute('aria-label', 'Voltar ao início do conteúdo');
+  voltarTopo.innerHTML = '<i class="bi bi-arrow-up" aria-hidden="true"></i>';
+  document.body.append(voltarTopo);
+  const atualizarVoltarTopo = () => { voltarTopo.hidden = window.scrollY < 500; };
+  window.addEventListener('scroll', atualizarVoltarTopo, { passive: true });
+  atualizarVoltarTopo();
+  voltarTopo.addEventListener('click', () => {
+    document.getElementById('conteudo').focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
+  const aviso = document.createElement('div');
+  aviso.className = 'demo-controles';
+  aviso.innerHTML = `<span>${dadosMobilys.data} · Dados salvos neste navegador</span><button type="button" class="btn btn-sm btn-outline-primary" id="demo-reiniciar">Reiniciar demonstração</button>`;
+  document.getElementById('conteudo').prepend(aviso);
+  document.getElementById('demo-reiniciar').addEventListener('click', async () => {
+    if (!window.confirm('Apagar as alterações locais e restaurar os dados iniciais da demonstração?')) return;
+    if (await executarAlteracao(() => dadosMobilys.reiniciar())) window.location.reload();
+  });
+  atualizarIdentidadeAluno();
+  if (dadosMobilys.erro) mostrarToast(dadosMobilys.erro, false);
 
   if (viewAtual === 'admin-dashboard') atualizarDashboard();
   if (viewAtual === 'admin-cadastros') montarAbasCadastro();
@@ -239,31 +310,42 @@ function atualizarDashboard(){
   }
   const elData = document.getElementById('painel-data');
   if (elData){
-    elData.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+    elData.textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   document.getElementById('d-alunos').textContent = DB.alunos.length;
   document.getElementById('d-rotas').textContent = DB.rotas.length;
   document.getElementById('d-veiculos').textContent = DB.veiculos.length;
-  const presentes = DB.historicoPresencas.filter(p => p.status === 'presente').length;
-  const pct = Math.round((presentes / DB.historicoPresencas.length) * 100);
-  document.getElementById('d-presenca').textContent = pct + '%';
+  const registrosHoje = DB.historicoPresencas.filter(p => p.data === dadosMobilys.data);
+  const presentes = registrosHoje.filter(p => p.status === 'presente').length;
+  document.getElementById('d-presenca').textContent = registrosHoje.length ? Math.round(presentes / registrosHoje.length * 100) + '%' : '—';
 
   const corpo = document.getElementById('tabela-viagens-hoje');
-  corpo.innerHTML = DB.rotas.map(r => `
+  corpo.innerHTML = DB.rotas.filter(r => r.paradas?.length && r.paradasVolta?.length).flatMap(r => ['ida', 'volta'].map(turno => {
+    const v = dadosMobilys.viagem(r.id, turno);
+    const motorista = DB.veiculos.find(v => v.placa === r.veiculo)?.motorista || 'Não associado';
+    return `
     <tr>
-      <td>${r.nome}</td>
-      <td>${DB.motoristas.find(m => m.veiculo === r.veiculo)?.nome ?? '—'}</td>
-      <td>${r.turno}</td>
-      <td><span class="badge selo-pendente">${r.veiculo === 'Não associado' ? 'Sem veículo associado' : 'Programada'}</span></td>
-      <td><span class="badge selo-presente">${r.alunos}/${r.alunos} confirmados</span></td>
-    </tr>`).join('');
+      <td>${escaparHTML(r.nome)}</td>
+      <td>${escaparHTML(motorista)}</td>
+      <td>${turno === 'ida' ? 'Ida' : 'Volta'}</td>
+      <td><span class="badge selo-pendente">${{ 'nao-iniciada': 'Não iniciada', 'em-andamento': 'Em andamento', encerrada: 'Encerrada' }[v.status]}</span></td>
+      <td><span class="badge selo-presente">${v.alunos.length} confirmados</span></td>
+    </tr>`;
+  })).join('');
 
   renderGraficosDashboard();
 }
 
 /* Gráficos do painel (Chart.js) — carregado apenas em admin-painel.html */
 function renderGraficosDashboard(){
+  DB.rotas.forEach(r => r.alunos = DB.alunos.filter(a => a.rota === r.nome).length);
+  const datas = [...new Set(DB.historicoPresencas.map(p => p.data))].sort((a,b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join(''))).slice(-7);
+  const frequencia = datas.map(data => {
+    const registros = DB.historicoPresencas.filter(p => p.data === data);
+    return { dia: data.slice(0, 5), pct: Math.round(registros.filter(p => p.status === 'presente').length / registros.length * 100) };
+  });
+  document.getElementById('dados-presenca-periodo').textContent = frequencia.map(d => `${d.dia}: ${d.pct}%`).join(' · ') || 'Sem registros';
   const estilo = getComputedStyle(document.documentElement);
   const cor = nome => estilo.getPropertyValue(nome).trim();
   const corPrimaria = cor('--primaria-700');
@@ -280,6 +362,11 @@ function renderGraficosDashboard(){
   }
   Chart.defaults.font.family = "'Roboto', system-ui, sans-serif";
   Chart.defaults.color = corTexto;
+  ['grafico-presenca-semana', 'grafico-alunos-rota', 'grafico-presencas-rota'].forEach(id => {
+    Chart.getChart(id)?.destroy();
+    const canvas = document.getElementById(id);
+    if (canvas) delete canvas.dataset.montado;
+  });
 
   const canvasLinha = document.getElementById('grafico-presenca-semana');
   if (canvasLinha && !canvasLinha.dataset.montado){
@@ -287,10 +374,10 @@ function renderGraficosDashboard(){
     new Chart(canvasLinha, {
       type: 'line',
       data: {
-        labels: DB.presencaSemana.map(d => d.dia),
+        labels: frequencia.map(d => d.dia),
         datasets: [{
           label: 'Presença (%)',
-          data: DB.presencaSemana.map(d => d.pct),
+          data: frequencia.map(d => d.pct),
           borderColor: corPrimaria,
           backgroundColor: corPrimariaClara,
           fill: true,
@@ -362,8 +449,10 @@ const ENTIDADES = {
       { chave: 'nome', rotulo: 'Nome completo', tipo: 'text', obrigatorio: true },
       { chave: 'matricula', rotulo: 'Matrícula', tipo: 'text', obrigatorio: true },
       { chave: 'turma', rotulo: 'Turma', tipo: 'text', obrigatorio: true },
-      { chave: 'responsavel', rotulo: 'Responsável', tipo: 'text', obrigatorio: true },
+      { chave: 'responsavel', rotulo: 'Responsável', tipo: 'text', obrigatorio: false },
       { chave: 'rota', rotulo: 'Rota associada', tipo: 'select', origem: 'rotas', campoOrigem: 'nome', legenda: 'Associar aluno à rota' },
+      { chave: 'pontoIndice', rotulo: 'Ponto de embarque da ida', tipo: 'select', opcoes: [] },
+      { chave: 'instituicao', rotulo: 'Instituição de embarque da volta', tipo: 'select', opcoes: [] },
     ],
   },
   rotas: {
@@ -439,10 +528,12 @@ const normalizarBusca = valor => String(valor ?? '').normalize('NFD').replace(/[
 function itinerarioRotaHTML(rota){
   return (rota.paradas || []).map(p => `<li><strong>${escaparHTML(p.horario)} · ${escaparHTML(p.local)}</strong>${p.referencia ? `<small>${escaparHTML(p.referencia)}</small>` : ''}</li>`).join('') || '<li><strong>Pontos de saída não informados</strong></li>';
 }
-function rotaDoAluno(){ return DB.rotas.find(r => r.nome === agendamentos[0].rota); }
+function rotaDoAluno(){ return DB.rotas.find(r => r.id === agendamentos[0]?.rotaId); }
+function pontoDoAluno(){ return rotaDoAluno()?.paradas[agendamentos[0]?.pontoIndice]; }
 function renderRotaAluno(){
   const rota = rotaDoAluno();
-  const ponto = rota.paradas[0]; // Vínculo fictício do aluno de demonstração ao primeiro ponto.
+  if (!rota) return;
+  const ponto = pontoDoAluno() || { local: 'Ponto não associado', horario: '—', referencia: '' };
   const valores = {
     'ra-proxima': `Saída do seu ponto às ${ponto.horario}`,
     'ra-rota': `${rota.nome} · ${rota.turno}`,
@@ -454,8 +545,9 @@ function renderRotaAluno(){
   };
   Object.entries(valores).forEach(([id, valor]) => { const el = document.getElementById(id); if (el) el.textContent = valor; });
   const itinerario = document.getElementById('ra-itinerario');
-  if (itinerario) itinerario.innerHTML = itinerarioRotaHTML(rota);
+  if (itinerario) itinerario.innerHTML = itinerarioRotaHTML({ paradas: document.getElementById('ra-trajeto')?.value === 'volta' ? rota.paradasVolta : rota.paradas });
 }
+document.getElementById('ra-trajeto')?.addEventListener('change', renderRotaAluno);
 let entidadeAtual = 'alunos';
 let cadastroRetornoFoco = null;
 
@@ -529,7 +621,7 @@ function renderTabelaCadastro(){
     ${def.colunas.map((c, i) => {
       const valor = c.campo === 'alunos' ? DB.alunos.filter(a => a.rota === item.nome).length : item[c.campo] ?? 'Não associado';
       let html = escaparHTML(valor);
-      if (i === 0) html = `<div class="cadastro-identidade"><span class="cadastro-avatar"><i class="bi ${ui.icone}" aria-hidden="true"></i></span><span><strong>${html}</strong><small>${escaparHTML(entidadeAtual === 'alunos' ? `Responsável: ${item.responsavel || 'Não informado'}` : entidadeAtual === 'veiculos' ? item.modelo : `Registro #${String(item.id).padStart(3, '0')}`)}</small></span></div>`;
+      if (i === 0) html = `<div class="cadastro-identidade"><span class="cadastro-avatar"><i class="bi ${ui.icone}" aria-hidden="true"></i></span><span><strong>${html}</strong><small>${escaparHTML(entidadeAtual === 'alunos' ? (item.responsavel ? `Responsável: ${item.responsavel}` : 'Sem responsável vinculado') : entidadeAtual === 'veiculos' ? item.modelo : `Registro #${String(item.id).padStart(3, '0')}`)}</small></span></div>`;
       else if (['rota','turno','perfil','motorista','veiculo'].includes(c.campo)) html = `<span class="cadastro-vinculo ${valor === 'Não associado' || !valor ? 'sem-vinculo' : ''}">${html || 'Não associado'}</span>`;
       if (entidadeAtual === 'rotas' && i === 0) html = `<button type="button" class="rota-expandir" id="rota-botao-${item.id}" aria-expanded="false" aria-controls="rota-detalhes-${item.id}">${html}<span class="rota-expandir-indicador"><span class="rota-expandir-texto">Ver itinerário</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></button>`;
       return `<td data-label="${c.rotulo}">${html}</td>`;
@@ -581,9 +673,7 @@ function excluirRegistro(id){
   form.innerHTML = `<div class="cadastro-exclusao"><i class="bi bi-trash3"></i><strong>${escaparHTML(registro.nome || registro.placa)}</strong><p class="desc mb-0">O registro será removido desta lista de demonstração.</p></div>`;
   form.onsubmit = e => {
     e.preventDefault();
-    DB[def.chave] = DB[def.chave].filter(i => i.id !== id);
-    modalCadastro.hide(); montarAbasCadastro();
-    mostrarToast('Registro excluído com sucesso.');
+    executarAlteracao(() => dadosMobilys.cadastro(def.chave, id, null), 'Registro excluído com sucesso.').then(ok => { if (ok) modalCadastro.hide(); });
   };
   modalCadastro.show();
 }
@@ -606,8 +696,24 @@ function abrirModalCadastro(id){
       const dicas = { nome: 'Digite o nome completo', matricula: 'Ex.: 2026006', turma: 'Ex.: Manhã ou Noite', responsavel: 'Nome do responsável', cnh: 'Número da CNH', telefone: 'Ex.: (19) 99123-4567', placa: 'Ex.: ABC-1D23', modelo: 'Ex.: Volksbus 15.190', capacidade: 'Ex.: 32', email: 'nome@exemplo.com.br' };
       controle = `<input type="${c.chave === 'telefone' ? 'tel' : c.tipo}" class="form-control" ${attrs} value="${escaparHTML(registro[c.chave] ?? '')}" placeholder="${entidadeAtual === 'rotas' && c.chave === 'nome' ? 'Ex.: Rota 10 — São João da Boa Vista' : dicas[c.chave] || ''}" ${c.tipo === 'number' ? 'min="1" step="1"' : ''}>`;
     }
+    if (c.chave === 'responsavel') {
+      controle = controle.replace('<input ', '<input aria-describedby="ajuda-responsavel" ') + '<div class="form-text" id="ajuda-responsavel">Para alunos maiores de idade que não possuem responsável vinculado, deixe este campo em branco.</div>';
+    }
     return `<div class="${['nome','responsavel','email'].includes(c.chave) || c.tipo === 'select' ? 'col-12' : 'col-md-6'}"><label class="form-label" for="campo-${c.chave}">${c.rotulo}${c.obrigatorio ? ' <span aria-hidden="true">*</span>' : ' <small class="text-body-secondary">(opcional)</small>'}</label>${controle}</div>`;
   }).join('')}</div></fieldset>`).join('') + `<p class="cadastro-form-ajuda"><i class="bi bi-info-circle me-1"></i>${ui.ajuda}</p>`;
+  if (entidadeAtual === 'alunos') {
+    const preencherPontos = (manter = false) => {
+      const rota = DB.rotas.find(r => r.nome === form.elements.rota.value);
+      const ponto = form.elements.pontoIndice;
+      const instituicao = form.elements.instituicao;
+      ponto.innerHTML = '<option value="">Selecione o ponto</option>' + (rota?.paradas || []).map((p, i) => `<option value="${i}">${escaparHTML(p.horario + ' · ' + p.local)}</option>`).join('');
+      instituicao.innerHTML = '<option value="">Selecione a instituição</option>' + (rota?.instituicoes || []).map(i => `<option>${escaparHTML(i)}</option>`).join('');
+      ponto.required = instituicao.required = !!rota;
+      if (manter) { ponto.value = registro.pontoIndice ?? ''; instituicao.value = registro.instituicao || ''; }
+    };
+    preencherPontos(true);
+    form.elements.rota.addEventListener('change', () => preencherPontos());
+  }
   form.onsubmit = e => {
     e.preventDefault();
     if (!form.reportValidity()) return;
@@ -615,10 +721,7 @@ function abrirModalCadastro(id){
     const vazio = def.campos.find(c => c.obrigatorio && !dados[c.chave]);
     if (vazio){ form.elements[vazio.chave].value = ''; form.reportValidity(); return; }
     def.campos.filter(c => c.tipo === 'number').forEach(c => dados[c.chave] = Number(dados[c.chave]));
-    if (id) Object.assign(registro, dados);
-    else DB[def.chave].push({ id: Math.max(0, ...DB[def.chave].map(i => i.id)) + 1, ...dados });
-    modalCadastro.hide(); montarAbasCadastro();
-    mostrarToast(id ? 'Alterações salvas com sucesso.' : 'Cadastro realizado com sucesso.');
+    executarAlteracao(() => dadosMobilys.cadastro(def.chave, id, dados), id ? 'Alterações salvas com sucesso.' : 'Cadastro realizado com sucesso.').then(ok => { if (ok) modalCadastro.hide(); });
   };
   modalCadastro.show();
 }
@@ -628,9 +731,11 @@ function abrirModalCadastro(id){
 function preencherFiltroRotas(){
   ['f-presenca-rota', 'rel-rota'].forEach(idSelect => {
     const sel = document.getElementById(idSelect);
-    if (!sel || sel.dataset.preenchido) return;
-    sel.innerHTML += DB.rotas.map(r => `<option value="${r.nome}">${r.nome}</option>`).join('');
-    sel.dataset.preenchido = '1';
+    if (!sel) return;
+    const anterior = sel.value;
+    const nomes = [...new Set([...DB.rotas.map(r => r.nome), ...DB.historicoPresencas.map(p => p.rota)])];
+    sel.innerHTML = '<option value="">Todas as rotas</option>' + nomes.map(nome => `<option value="${escaparHTML(nome)}">${escaparHTML(nome)}</option>`).join('');
+    sel.value = nomes.includes(anterior) ? anterior : '';
   });
 }
 
@@ -707,7 +812,7 @@ function iniciarRelatorios(){
 }
 
 function relatorioEstaAtualizado(){
-  return relatorioGerado && JSON.stringify(relatorioGerado.filtros) === JSON.stringify(filtrosRelatorio());
+  return relatorioGerado && relatorioGerado.revisao === dadosMobilys.revisao && JSON.stringify(relatorioGerado.filtros) === JSON.stringify(filtrosRelatorio());
 }
 
 function atualizarEstadoRelatorio(){
@@ -726,7 +831,7 @@ function gerarRelatorio(){
     const data = dataRelatorioISO(p.data);
     return data >= filtros.inicio && data <= filtros.fim && (!filtros.rota || p.rota === filtros.rota) && (!filtros.turno || p.turno === filtros.turno);
   }).map(p => ({ ...p })).sort((a,b) => dataRelatorioISO(b.data).localeCompare(dataRelatorioISO(a.data)) || a.aluno.localeCompare(b.aluno, 'pt-BR'));
-  relatorioGerado = { filtros, registros };
+  relatorioGerado = { filtros, registros, revisao: dadosMobilys.revisao };
   const presentes = registros.filter(p => p.status === 'presente').length;
   const ausentes = registros.filter(p => p.status === 'ausente').length;
   document.getElementById('rel-total').textContent = registros.length;
@@ -790,6 +895,10 @@ document.getElementById('rel-imprimir')?.addEventListener('click', () => {
    (iniciar, listar alunos confirmados, registrar presença ida/volta, encerrar)
    ============================================================ */
 function renderViagem(){
+  sincronizarViagem();
+  const seletor = document.getElementById('mv-rota-select');
+  seletor.innerHTML = DB.rotas.filter(r => r.paradas?.length && r.paradasVolta?.length).map(r => `<option value="${r.id}">${escaparHTML(r.nome)}</option>`).join('');
+  seletor.value = viagem.rotaId;
   const selo = document.getElementById('mv-status-selo');
   const btnIniciar = document.getElementById('btn-iniciar-viagem');
   const btnEncerrar = document.getElementById('btn-encerrar-viagem');
@@ -801,7 +910,7 @@ function renderViagem(){
   btnIniciar.classList.toggle('d-none', viagem.status !== 'nao-iniciada');
   btnEncerrar.classList.toggle('d-none', viagem.status !== 'em-andamento');
   document.getElementById('mv-orientacao').textContent = viagem.status === 'encerrada' ? 'Viagem encerrada. Confira os registros deste trajeto.' : viagem.status === 'em-andamento' ? 'Registre a presença de cada aluno durante o embarque.' : 'Inicie a viagem para registrar a presença dos alunos.';
-  const rota = DB.rotas.find(r => r.id === viagem.rotaId);
+  const rota = viagem.rota;
   document.getElementById('mv-rota-nome').textContent = rota.nome;
   document.getElementById('mv-horarios').textContent = `${rota.turno} · Primeira saída ${rota.paradas[0].horario} · Retorno ${rota.horarioRetorno} (fictício)`;
   document.getElementById('mv-destino').textContent = viagem.turno === 'ida' ? `${rota.origem} → ${rota.destino}` : `${rota.destino} → ${rota.origem} · Retorno fictício`;
@@ -811,10 +920,10 @@ function renderViagem(){
 }
 
 function paradasDaViagem(){
-  const rota = DB.rotas.find(r => r.id === viagem.rotaId);
+  const rota = viagem.rota;
   return viagem.turno === 'ida' ? rota.paradas : rota.paradasVolta;
 }
-function indicePontoAluno(a){ return viagem.turno === 'ida' ? a.pontoIndice : [0, 1, 4][viagem.alunos.indexOf(a)]; }
+function indicePontoAluno(a){ return a.embarqueIndice; }
 function renderLinhaTempo(){
   const rota = DB.rotas.find(r => r.id === viagem.rotaId);
   const ida = viagem.turno === 'ida';
@@ -853,35 +962,21 @@ function renderLinhaTempo(){
 }
 
 document.getElementById('mv-avancar-ponto')?.addEventListener('click', () => {
-  const total = paradasDaViagem().length;
-  if (viagem.status !== 'em-andamento' || viagem.pontoAtual >= total) return;
-  if (viagem.noPonto){
-    if (viagem.alunos.some(a => indicePontoAluno(a) === viagem.pontoAtual && a[viagem.turno] === null)) return;
-    viagem.pontoAtual++;
-    viagem.noPonto = false;
-  } else viagem.noPonto = true;
-  renderListaAlunosViagem();
-  if (viagem.pontoAtual === total) document.getElementById('btn-encerrar-viagem').focus();
+  executarAlteracao(() => dadosMobilys.agir(viagem.rotaId, viagem.turno, 'avancar'));
 });
 document.getElementById('mv-filtrar-ponto')?.addEventListener('change', renderListaAlunosViagem);
-
 document.getElementById('btn-iniciar-viagem')?.addEventListener('click', () => {
-  viagem.status = 'em-andamento';
-  mostrarToast('Viagem iniciada. Boa rota!');
-  renderViagem();
+  executarAlteracao(() => dadosMobilys.agir(viagem.rotaId, viagem.turno, 'iniciar'), 'Viagem iniciada. Confirmações encerradas para este trajeto.');
 });
 document.getElementById('btn-encerrar-viagem')?.addEventListener('click', () => {
-  if (viagem.pontoAtual < paradasDaViagem().length) return;
-  viagem.status = 'encerrada';
-  mostrarToast('Viagem encerrada com sucesso.');
+  executarAlteracao(() => dadosMobilys.agir(viagem.rotaId, viagem.turno, 'encerrar'), 'Viagem encerrada. Registros disponíveis no histórico e nos relatórios.');
+});
+document.getElementById('mv-turno-select')?.addEventListener('change', e => {
+  viagem.turno = e.target.value;
   renderViagem();
 });
-document.getElementById('mv-turno-select')?.addEventListener('change', (e) => {
-  viagem.statusPorTurno[viagem.turno] = viagem.status;
-  viagem.progressoPorTurno[viagem.turno] = { pontoAtual: viagem.pontoAtual, noPonto: viagem.noPonto };
-  viagem.turno = e.target.value;
-  Object.assign(viagem, viagem.progressoPorTurno[viagem.turno]);
-  viagem.status = viagem.statusPorTurno[viagem.turno];
+document.getElementById('mv-rota-select')?.addEventListener('change', e => {
+  viagem.rotaId = Number(e.target.value);
   renderViagem();
 });
 document.getElementById('busca-alunos-viagem')?.addEventListener('input', () => renderListaAlunosViagem());
@@ -904,13 +999,14 @@ function renderListaAlunosViagem(){
 
   lista.innerHTML = dados.map(a => {
     const val = a[viagem.turno];
+    const podeRegistrar = emAndamento && viagem.noPonto && indicePontoAluno(a) === viagem.pontoAtual;
     return `
     <div class="cartao-aluno">
       <div class="avatar">${a.nome.split(' ').map(p=>p[0]).slice(0,2).join('')}</div>
-      <div class="info"><div class="nome">${a.nome}</div><div class="ponto">${a.ponto}</div></div>
+      <div class="info"><div class="nome">${escaparHTML(a.nome)}</div><div class="ponto">${escaparHTML(a.ponto || 'Ponto não associado')}</div></div>
       <div class="toggle-presenca">
-        <button data-id="${a.id}" data-valor="presente" aria-label="Marcar ${a.nome} presente" aria-pressed="${val === 'presente'}" class="${val === 'presente' ? 'pres-ativo' : ''}" ${!emAndamento ? 'disabled' : ''}>Presente</button>
-        <button data-id="${a.id}" data-valor="ausente" aria-label="Marcar ${a.nome} ausente" aria-pressed="${val === 'ausente'}" class="${val === 'ausente' ? 'aus-ativo' : ''}" ${!emAndamento ? 'disabled' : ''}>Ausente</button>
+        <button data-id="${a.id}" data-valor="presente" aria-label="Marcar ${escaparHTML(a.nome)} presente" aria-pressed="${val === 'presente'}" class="${val === 'presente' ? 'pres-ativo' : ''}" ${!podeRegistrar ? 'disabled' : ''}>Presente</button>
+        <button data-id="${a.id}" data-valor="ausente" aria-label="Marcar ${escaparHTML(a.nome)} ausente" aria-pressed="${val === 'ausente'}" class="${val === 'ausente' ? 'aus-ativo' : ''}" ${!podeRegistrar ? 'disabled' : ''}>Ausente</button>
       </div>
     </div>`;
   }).join('');
@@ -918,10 +1014,9 @@ function renderListaAlunosViagem(){
   lista.querySelectorAll('.toggle-presenca button').forEach(btn => {
     btn.addEventListener('click', () => {
       const aluno = viagem.alunos.find(a => a.id === Number(btn.dataset.id));
-      aluno[viagem.turno] = btn.dataset.valor;
-      renderListaAlunosViagem();
-      lista.querySelector(`[data-id="${btn.dataset.id}"][data-valor="${btn.dataset.valor}"]`)?.focus();
-      mostrarToast(`Presença registrada: ${aluno.nome} — ${btn.dataset.valor === 'presente' ? 'presente' : 'ausente'} (${viagem.turno}).`);
+      executarAlteracao(() => dadosMobilys.agir(viagem.rotaId, viagem.turno, 'presenca', aluno.id, btn.dataset.valor), 'Presença salva no histórico.').then(() => {
+        lista.querySelector(`[data-id="${btn.dataset.id}"][data-valor="${btn.dataset.valor}"]`)?.focus();
+      });
     });
   });
 }
@@ -930,16 +1025,27 @@ function renderListaAlunosViagem(){
    ALUNO/RESPONSÁVEL — AGENDAMENTOS, STATUS E HISTÓRICO
    ============================================================ */
 function renderAgendamentos(){
+  atualizarAgenda();
+  document.querySelector('.faixa-viagem').hidden = !agendamentos.length;
+  document.getElementById('ra-ponto').closest('aside').hidden = !agendamentos.length;
+  if (!agendamentos.length) {
+    document.getElementById('lista-agendamentos').innerHTML = '<div class="vazio"><strong>Nenhuma viagem disponível</strong>Solicite a associação do aluno a uma rota com itinerário.</div>';
+    document.getElementById('ra-resumo').textContent = 'Sem agendamento';
+    return;
+  }
   renderRotaAluno();
+  const confirmados = ['ida', 'volta'].filter(t => agendamentos[0][t] === 'confirmado').length;
+  document.getElementById('ra-resumo').textContent = `${confirmados} de 2 trajetos confirmados para hoje`;
   const lista = document.getElementById('lista-agendamentos');
   lista.innerHTML = agendamentos.map(a => `
     <article class="cartao-aluno flex-wrap">
       <div class="avatar">AB</div>
-      <div class="info"><div class="nome">${a.nome}</div><div class="ponto">Aluna de demonstração · Manhã · ${a.rota}</div></div>
+      <div class="info"><div class="nome">${escaparHTML(a.nome)}</div><div class="ponto">${escaparHTML(a.turma)} · ${escaparHTML(a.rota)}</div></div>
       <div class="agenda-trajetos">${['ida', 'volta'].map(turno => `
         <section class="agenda-trajeto">
           <div class="d-flex align-items-center justify-content-between gap-2"><h3 class="mb-0"><i class="bi ${turno === 'ida' ? 'bi-sunrise' : 'bi-house-door'} me-1"></i>${turno === 'ida' ? 'Ida à instituição' : 'Volta para casa'}</h3><span class="badge ${a[turno] === 'confirmado' ? 'selo-presente' : 'selo-ausente'}">${a[turno] === 'confirmado' ? 'Confirmado' : 'Cancelado'}</span></div>
-          <p class="horario">${turno === 'ida' ? rotaDoAluno().paradas[0].horario : rotaDoAluno().horarioRetorno}</p><p class="desc mb-0">${turno === 'ida' ? 'Saída do ponto de encontro' : 'Retorno fictício · embarque na instituição'}</p>
+          <p class="horario">${turno === 'ida' ? pontoDoAluno()?.horario || '—' : rotaDoAluno().paradasVolta.find(p => p.local === a.instituicao)?.horario || '—'}</p><p class="desc mb-0">${turno === 'ida' ? 'Saída do ponto de encontro' : 'Retorno fictício · ' + escaparHTML(a.instituicao || 'Instituição não associada')}</p>
+          ${a[turno + 'Bloqueado'] ? '<p class="desc mt-2">Confirmações encerradas: este trajeto já foi iniciado.</p>' : ''}
           <div class="toggle-presenca" role="group" aria-label="Agendamento de ${turno}">
             <button data-turno="${turno}" data-valor="confirmado" data-id="${a.id}" aria-pressed="${a[turno] === 'confirmado'}" class="${a[turno] === 'confirmado' ? 'pres-ativo' : ''}"><i class="bi bi-check2"></i> Confirmar</button>
             <button data-turno="${turno}" data-valor="cancelado" data-id="${a.id}" aria-pressed="${a[turno] === 'cancelado'}" class="${a[turno] === 'cancelado' ? 'aus-ativo' : ''}">Cancelar</button>
@@ -947,56 +1053,72 @@ function renderAgendamentos(){
         </section>`).join('')}</div>
     </article>`).join('');
   lista.querySelectorAll('button[data-turno]').forEach(btn => {
+    btn.disabled = !!agendamentos[0][btn.dataset.turno + 'Bloqueado'];
     btn.addEventListener('click', () => {
       const ag = agendamentos.find(a => a.id === Number(btn.dataset.id));
-      ag[btn.dataset.turno] = btn.dataset.valor;
-      renderAgendamentos();
-      lista.querySelector(`[data-id="${btn.dataset.id}"][data-turno="${btn.dataset.turno}"][data-valor="${btn.dataset.valor}"]`)?.focus();
-      mostrarToast(btn.dataset.valor === 'confirmado' ? 'Utilização do transporte confirmada.' : 'Utilização do transporte cancelada.');
+      executarAlteracao(() => dadosMobilys.confirmar(ag.id, btn.dataset.turno, btn.dataset.valor), btn.dataset.valor === 'confirmado' ? 'Utilização confirmada.' : 'Utilização cancelada.').then(() => {
+        lista.querySelector(`[data-id="${btn.dataset.id}"][data-turno="${btn.dataset.turno}"][data-valor="${btn.dataset.valor}"]`)?.focus();
+      });
     });
   });
 }
 
-const ETAPAS_VIAGEM = ['Aguardando', 'A caminho', 'No ponto', 'Chegou'];
-let etapaAtual = 1;
+const ETAPAS_VIAGEM = ['Aguardando', 'Em viagem', 'Na parada', 'Encerrada'];
 function renderStatusViagem(){
+  atualizarAgenda();
+  const turno = document.getElementById('rs-turno').value;
+  const a = agendamentos[0];
+  const painel = document.getElementById('rs-conteudo');
+  painel.hidden = !a;
+  document.getElementById('rs-sem-viagem').hidden = !!a;
+  if (!a) return;
   renderRotaAluno();
-  const trilha = document.getElementById('trilha-status');
-  trilha.innerHTML = ETAPAS_VIAGEM.map((et, i) => `
-    <div class="etapa ${i < etapaAtual ? 'feita' : ''} ${i === etapaAtual ? 'atual' : ''}" ${i === etapaAtual ? 'aria-current="step"' : ''}>
-      <div class="bola">${i < etapaAtual ? '<i class="bi bi-check-lg"></i>' : ''}</div>
-      <div class="rotulo-etapa">${et}</div>
-    </div>`).join('');
-  document.getElementById('rs-mensagem').textContent = ['Aguardando o início da viagem.', 'O ônibus está a caminho do ponto de embarque.', 'O ônibus chegou ao ponto. Prepare-se para embarcar.', 'O ônibus chegou à instituição. Trajeto simulado concluído.'][etapaAtual];
-  document.getElementById('rs-status').textContent = ETAPAS_VIAGEM[etapaAtual];
-  document.getElementById('rs-avancar').textContent = etapaAtual === 3 ? 'Reiniciar simulação' : 'Simular próxima etapa →';
+  const v = dadosMobilys.viagem(a.rotaId, turno);
+  const rota = v.rota;
+  const volta = turno === 'volta';
+  const paradas = volta ? rota.paradasVolta : rota.paradas;
+  const ponto = paradas[v.pontoAtual];
+  const etapa = v.status === 'encerrada' ? 3 : v.status === 'nao-iniciada' ? 0 : v.noPonto ? 2 : 1;
+  document.getElementById('rs-rota').textContent = rota.nome + ' · ' + (volta ? 'Volta' : 'Ida');
+  document.getElementById('rs-ponto').textContent = volta ? 'Desembarque em ' + (pontoDoAluno()?.local || 'ponto não associado') : 'Embarque em ' + (pontoDoAluno()?.local || 'ponto não associado');
+  document.getElementById('rs-origem-mapa').textContent = volta ? 'Instituição' : 'Aguaí';
+  document.getElementById('rs-destino-mapa').textContent = volta ? 'Aguaí' : 'Destino';
+  document.getElementById('rs-chegada').textContent = volta ? rota.horarioChegada : 'Não informado';
+  document.getElementById('rs-chegada-nota').textContent = volta ? 'Horário fictício para o último desembarque em Aguaí.' : 'O material informa apenas as saídas de Aguaí.';
+  document.getElementById('trilha-status').innerHTML = ETAPAS_VIAGEM.map((et, i) => '<div class="etapa ' + (i === etapa ? 'atual' : '') + '" ' + (i === etapa ? 'aria-current="step"' : '') + '><div class="bola"></div><div class="rotulo-etapa">' + et + '</div></div>').join('');
+  const aluno = v.alunos.find(al => al.id === a.id);
+  const registro = aluno?.status === 'presente' ? 'Sua presença foi registrada.' : aluno?.status === 'ausente' ? 'Sua ausência foi registrada.' : a[turno] === 'cancelado' ? 'Você cancelou a utilização deste trajeto.' : 'Sua presença ainda não foi registrada.';
+  const mensagem = etapa === 0 ? 'Aguardando o motorista iniciar a viagem.' : etapa === 3 ? 'Viagem encerrada pelo motorista.' : ponto ? (v.noPonto ? 'Ônibus na parada: ' : 'Ônibus a caminho de: ') + ponto.local + '.' : 'Paradas concluídas. Aguardando o motorista encerrar a viagem.';
+  document.getElementById('rs-mensagem').textContent = mensagem + ' ' + registro;
+  document.getElementById('rs-aluno-situacao').textContent = registro;
+  document.getElementById('rs-parada-atual').textContent = etapa === 0 ? 'Aguardando sa?da' : etapa === 3 ? 'Percurso encerrado' : ponto ? (v.noPonto ? 'Na parada · ' : 'A caminho · ') + ponto.local : 'Todas as paradas concluídas';
+  document.getElementById('rs-status').textContent = ETAPAS_VIAGEM[etapa];
 }
-
-document.getElementById('rs-avancar')?.addEventListener('click', () => {
-  etapaAtual = (etapaAtual + 1) % ETAPAS_VIAGEM.length;
-  renderStatusViagem();
-});
-
+document.getElementById('rs-turno')?.addEventListener('change', renderStatusViagem);
 function renderHistoricoResp(){
+  const historicoResp = dadosMobilys.historico(1);
   const situacao = document.getElementById('rh-situacao').value;
   const turno = document.getElementById('rh-turno').value;
-  const dados = historicoResp.filter(h => (!situacao || h.situacao === situacao) && (!turno || h.turno === turno));
-  document.getElementById('rh-total').textContent = historicoResp.length;
-  document.getElementById('rh-utilizados').textContent = historicoResp.filter(h => h.situacao === 'Utilizado').length;
-  document.getElementById('rh-cancelados').textContent = historicoResp.filter(h => h.situacao === 'Cancelado').length;
-  document.getElementById('rh-contagem').textContent = `${dados.length} de ${historicoResp.length} registros · Agosto de 2026`;
+  const data = document.getElementById('rh-data').value;
+  const dados = historicoResp.filter(h => (!situacao || h.situacao === situacao) && (!turno || h.turno === turno) && (!data || h.data.split('/').reverse().join('-') === data));
+  const ordem = document.getElementById('rh-ordem').value;
+  dados.sort((a, b) => (ordem === 'antigos' ? 1 : -1) * a.data.split('/').reverse().join('-').localeCompare(b.data.split('/').reverse().join('-')));
+  document.getElementById('rh-total').textContent = dados.length;
+  document.getElementById('rh-utilizados').textContent = dados.filter(h => h.situacao === 'Utilizado').length;
+  document.getElementById('rh-cancelados').textContent = dados.filter(h => h.situacao === 'Cancelado').length;
+  document.getElementById('rh-contagem').textContent = `${dados.length} de ${historicoResp.length} registros · Confirmação não equivale a presença`;
   const corpo = document.getElementById('tabela-historico-resp');
   corpo.innerHTML = dados.map(h => `
     <tr>
-      <td>${h.data}</td><td>${h.rota}</td><td>${h.turno}</td>
-      <td><span class="badge ${h.situacao === 'Utilizado' ? 'selo-presente' : 'selo-ausente'}">${h.situacao}</span></td>
+      <td data-label="Data">${escaparHTML(h.data)}</td><td data-label="Rota">${escaparHTML(h.rota)}</td><td data-label="Trajeto">${escaparHTML(h.turno)}</td>
+      <td data-label="Situação"><span class="badge ${h.situacao === 'Utilizado' ? 'selo-presente' : h.situacao === 'Aguardando registro' ? 'selo-pendente' : 'selo-ausente'}">${h.situacao}</span></td>
     </tr>`).join('') || '<tr><td colspan="4"><div class="vazio"><i class="bi bi-search"></i><strong>Nenhuma viagem encontrada</strong>Altere os filtros para consultar outros trajetos.</div></td></tr>';
 }
 
-['rh-situacao', 'rh-turno'].forEach(id => document.getElementById(id)?.addEventListener('change', renderHistoricoResp));
+['rh-situacao', 'rh-turno', 'rh-data', 'rh-ordem'].forEach(id => document.getElementById(id)?.addEventListener('change', renderHistoricoResp));
 document.getElementById('rh-limpar')?.addEventListener('click', () => {
+  document.getElementById('rh-data').value = '';
   document.getElementById('rh-situacao').value = '';
   document.getElementById('rh-turno').value = '';
   renderHistoricoResp();
 });
-
