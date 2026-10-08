@@ -9,6 +9,10 @@ e testes. As propostas anteriores de modificar os diagramas foram descartadas.
 O DER é conceitual. Algumas tabelas e campos físicos mantêm nomes anteriores
 para preservar a aplicação e os dados; a correspondência é registrada abaixo.
 As tabelas de execução de viagens e auditoria são complementos de implementação.
+Na V8, o cenário da rota 11 acrescenta destino por confirmação, sua ordem
+fixada por participante e omissão auditada de pontos de desembarque na volta.
+Esses campos complementam a implementação, sem alterar os diagramas aprovados;
+veja [modelagem](MODELAGEM.md#complementos-v7-e-v8) e [cenário da rota 11](ROTA-11.md).
 
 | Modelo aprovado | Implementação física / tela |
 | --- | --- |

@@ -2,9 +2,12 @@
 #op-conteudo .tabela-scroll { overflow-x: auto; max-width: 100%; }
 .operacao-tabela { min-width: 640px; }
 #op-detalhe { scroll-margin-top: 100px; }
+.percurso li.omitida { opacity: .8; border-left: 3px dashed #64748b; }
+.parada-omitida { color: #475569; font-weight: 600; }
+.percurso li small { display: block; }
 @media print {
   .topo-navbar, .nav-lateral, .nav-inferior, .rodape-app, .pular-conteudo,
-  #op-filtros, #op-busca, #op-situacao, button, #op-aviso { display: none !important; }
+  #op-filtros, #op-busca, #op-situacao, #op-trajeto, button, #op-aviso { display: none !important; }
   .conteudo { width: 100% !important; margin: 0 !important; padding: 0 !important; }
   .app-corpo { margin: 0 !important; padding: 0 !important; }
   .tabela-scroll { overflow: visible !important; }

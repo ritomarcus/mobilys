@@ -76,7 +76,12 @@ public class OperacaoService {
     public List<Map<String,Object>> agenda(UsuarioPrincipal u,LocalDate data) {
         perfil(u,"RESPONSAVEL");
         var rows=lista("SELECT a.id AS aluno_id,a.nome,a.rota_id,r.nome AS rota_nome,r.ativo AS rota_ativa,t.trajeto,COALESCE(g.status,'PENDENTE') AS status,v.id AS viagem_id,v.status AS viagem_status,COALESCE(g.parada_id,CASE WHEN t.trajeto='IDA' THEN a.parada_ida_id ELSE a.parada_volta_id END) AS parada_id FROM alunos a JOIN rotas r ON r.id=a.rota_id CROSS JOIN (VALUES ('IDA'),('VOLTA')) AS t(trajeto) LEFT JOIN agendamentos g ON g.aluno_id=a.id AND g.data_servico=? AND g.trajeto=t.trajeto LEFT JOIN viagens v ON v.rota_id=a.rota_id AND v.data_servico=? AND v.trajeto=t.trajeto WHERE "+ACESSO+" ORDER BY a.nome,t.trajeto",data,data,u.id());
-        for(var row:rows)row.put("pontos",lista("SELECT p.id,p.local,p.horario,p.endereco,p.latitude,p.longitude FROM alunos_pontos ap JOIN paradas p ON p.id=ap.parada_id WHERE ap.aluno_id=? AND ap.ativo AND p.rota_id=? AND p.trajeto=? AND p.tipo<>'DESEMBARQUE' ORDER BY p.ordem",row.get("aluno_id"),row.get("rota_id"),row.get("trajeto")));
+        for(var row:rows) {
+            row.put("pontos",lista("SELECT p.id,p.ordem,p.local,p.horario,p.endereco,p.latitude,p.longitude FROM alunos_pontos ap JOIN paradas p ON p.id=ap.parada_id WHERE ap.aluno_id=? AND ap.ativo AND p.rota_id=? AND p.trajeto=? AND p.tipo<>'DESEMBARQUE' ORDER BY p.ordem",row.get("aluno_id"),row.get("rota_id"),row.get("trajeto")));
+            row.put("destinos",lista("SELECT id,ordem,local,horario FROM paradas WHERE rota_id=? AND trajeto=? AND tipo IN ('DESEMBARQUE','AMBOS') ORDER BY ordem",row.get("rota_id"),row.get("trajeto")));
+            var salvo=lista("SELECT destino_id FROM agendamentos WHERE aluno_id=? AND data_servico=? AND trajeto=?",row.get("aluno_id"),data,row.get("trajeto"));
+            row.put("destino_id",salvo.isEmpty()?null:salvo.getFirst().get("destino_id"));
+        }
         return rows;
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
@@ -87,17 +92,28 @@ public class OperacaoService {
         if(contar("SELECT count(*) FROM viagens WHERE rota_id=? AND data_servico=? AND trajeto=?",aluno.get("rota_id"),dados.data(),dados.trajeto())>0)
             erro(HttpStatus.CONFLICT,"O trajeto já foi iniciado. Não é mais possível alterar a confirmação.");
         Object parada=dados.paradaId()!=null?dados.paradaId():aluno.get(dados.trajeto().equals("IDA")?"parada_ida_id":"parada_volta_id");
+        Object destino=dados.destinoId();
         if(dados.status().equals("CONFIRMADO")) {
             if(contar("SELECT count(*) FROM rotas WHERE id=? AND ativo",aluno.get("rota_id"))!=1)erro(HttpStatus.CONFLICT,"Esta rota está inativa.");
             if(parada!=null&&contar("SELECT count(*) FROM alunos_pontos WHERE aluno_id=? AND parada_id=? AND ativo",dados.alunoId(),parada)!=1)erro(HttpStatus.CONFLICT,"Ponto não autorizado para este aluno.");
             if(parada==null) erro(HttpStatus.CONFLICT,"Peça à administração para associar um ponto de embarque ao aluno.");
             validarParada(numero(parada),numero(aluno.get("rota_id")),dados.trajeto());
+            var embarque=unico("SELECT ordem FROM paradas WHERE id=?",parada);
+            var destinos=lista("SELECT id FROM paradas WHERE rota_id=? AND trajeto=? AND tipo IN ('DESEMBARQUE','AMBOS') AND ordem>=?",aluno.get("rota_id"),dados.trajeto(),embarque.get("ordem"));
+            // Um único destino dispensa escolha; vários exigem confirmação explícita.
+            if(destino==null && destinos.size()==1) destino=destinos.getFirst().get("id");
+            if(destino==null && contar("SELECT count(*) FROM paradas WHERE rota_id=? AND trajeto=? AND tipo IN ('DESEMBARQUE','AMBOS')",aluno.get("rota_id"),dados.trajeto())>0)
+                erro(HttpStatus.CONFLICT,"Selecione o ponto de desembarque após o embarque.");
+            final Object escolhido=destino;
+            if(destino!=null && destinos.stream().noneMatch(p->Objects.equals(p.get("id"),escolhido)))
+                erro(HttpStatus.BAD_REQUEST,"O destino deve permitir desembarque na mesma rota e trajeto, após o embarque.");
         }
-        var antes=lista("SELECT status,parada_id FROM agendamentos WHERE aluno_id=? AND data_servico=? AND trajeto=?",dados.alunoId(),dados.data(),dados.trajeto());
+        var antes=lista("SELECT status,parada_id,destino_id FROM agendamentos WHERE aluno_id=? AND data_servico=? AND trajeto=?",dados.alunoId(),dados.data(),dados.trajeto());
+        if(dados.status().equals("CANCELADO")) destino=antes.isEmpty()?null:antes.getFirst().get("destino_id");
         String anterior=antes.isEmpty()?"PENDENTE":antes.getFirst().get("status").toString();
-        if(anterior.equals(dados.status())&&!antes.isEmpty()&&Objects.equals(antes.getFirst().get("parada_id"),parada)) return;
-        db.update("INSERT INTO agendamentos(aluno_id,data_servico,trajeto,status,atualizado_em,parada_id) VALUES(?,?,?,?,?,?) ON CONFLICT(aluno_id,data_servico,trajeto) DO UPDATE SET status=excluded.status,atualizado_em=excluded.atualizado_em,parada_id=excluded.parada_id",dados.alunoId(),dados.data(),dados.trajeto(),dados.status(),agora(),parada);
-        evento(u,null,"ALUNO",dados.alunoId(),"AGENDAMENTO",dados.data()+" "+dados.trajeto()+": "+anterior+" -> "+dados.status()+"; ponto "+parada);
+        if(anterior.equals(dados.status())&&!antes.isEmpty()&&Objects.equals(antes.getFirst().get("parada_id"),parada)&&Objects.equals(antes.getFirst().get("destino_id"),destino)) return;
+        db.update("INSERT INTO agendamentos(aluno_id,data_servico,trajeto,status,atualizado_em,parada_id,destino_id) VALUES(?,?,?,?,?,?,?) ON CONFLICT(aluno_id,data_servico,trajeto) DO UPDATE SET status=excluded.status,atualizado_em=excluded.atualizado_em,parada_id=excluded.parada_id,destino_id=excluded.destino_id",dados.alunoId(),dados.data(),dados.trajeto(),dados.status(),agora(),parada,destino);
+        evento(u,null,"ALUNO",dados.alunoId(),"AGENDAMENTO",dados.data()+" "+dados.trajeto()+": "+anterior+" -> "+dados.status()+"; embarque "+parada+"; destino "+destino);
     }
     private List<Map<String,Object>> veiculosRota(Long id){return lista("SELECT DISTINCT v.id,v.placa,v.modelo,v.capacidade FROM veiculos v WHERE v.ativo AND (v.id=(SELECT veiculo_id FROM rotas WHERE id=?) OR v.id IN (SELECT veiculo_id FROM rotas_veiculos WHERE rota_id=?)) ORDER BY v.placa",id,id);}
     public List<Map<String,Object>> rotasMotorista(UsuarioPrincipal u) {
@@ -120,7 +136,7 @@ public class OperacaoService {
             if(contar("SELECT count(*) FROM participantes p JOIN alunos a ON a.id=p.aluno_id WHERE p.viagem_id=? AND "+ACESSO+"",id,u.id())==0) erro(HttpStatus.NOT_FOUND,"Viagem não encontrada.");
             filtro=" AND "+ACESSO+"";args.add(u.id());
         } else perfil(u,"ADMIN");
-        v.put("paradas",lista("SELECT ordem,local,referencia,horario,tipo,endereco,latitude,longitude FROM viagem_paradas WHERE viagem_id=? ORDER BY ordem",id));
+        v.put("paradas",lista("SELECT ordem,local,referencia,horario,tipo,endereco,latitude,longitude,omitida_em,motivo_omissao FROM viagem_paradas WHERE viagem_id=? ORDER BY ordem",id));
         v.put("alunos",lista("SELECT p.* FROM participantes p JOIN alunos a ON a.id=p.aluno_id WHERE p.viagem_id=?"+filtro+" ORDER BY p.embarque_ordem,p.aluno_nome",args.toArray()));
         return v;
     }
@@ -141,7 +157,7 @@ public class OperacaoService {
             erro(HttpStatus.CONFLICT,"Este motorista ou veículo já possui uma viagem em andamento.");
         var paradas=lista("SELECT * FROM paradas WHERE rota_id=? AND trajeto=? ORDER BY ordem",dados.rotaId(),dados.trajeto());
         if(paradas.isEmpty()) erro(HttpStatus.CONFLICT,"Cadastre o itinerário deste trajeto antes de iniciar.");
-        var alunos=lista("SELECT a.*,g.parada_id AS embarque_agendado FROM alunos a JOIN agendamentos g ON g.aluno_id=a.id WHERE a.rota_id=? AND g.data_servico=? AND g.trajeto=? AND g.status='CONFIRMADO' ORDER BY a.id",dados.rotaId(),hoje(),dados.trajeto());
+        var alunos=lista("SELECT a.*,g.parada_id AS embarque_agendado,g.destino_id AS destino_agendado FROM alunos a JOIN agendamentos g ON g.aluno_id=a.id WHERE a.rota_id=? AND g.data_servico=? AND g.trajeto=? AND g.status='CONFIRMADO' ORDER BY a.id",dados.rotaId(),hoje(),dados.trajeto());
         if(alunos.size()>numero(r.get("capacidade"))) erro(HttpStatus.CONFLICT,"A quantidade de alunos confirmados excede a capacidade do veículo.");
         String coluna="embarque_agendado";
         for(var a:alunos) {
@@ -152,15 +168,39 @@ public class OperacaoService {
             long embarque=numero(paradas.stream().filter(p->numero(p.get("id"))==numero(a.get(coluna))).findFirst().orElseThrow().get("ordem"));
             if(paradas.stream().anyMatch(p->!p.get("tipo").equals("EMBARQUE")) && paradas.stream().noneMatch(p->!p.get("tipo").equals("EMBARQUE")&&numero(p.get("ordem"))>=embarque))
                 erro(HttpStatus.CONFLICT,"O itinerário precisa de uma parada de desembarque após os embarques confirmados.");
+            var destinos=paradas.stream().filter(p->!p.get("tipo").equals("EMBARQUE")&&numero(p.get("ordem"))>=embarque).toList();
+            if(a.get("destino_agendado")==null && destinos.size()==1) a.put("destino_agendado",destinos.getFirst().get("id"));
+            if(a.get("destino_agendado")==null && !destinos.isEmpty())
+                erro(HttpStatus.CONFLICT,"Há confirmação sem destino. Peça à família para atualizar o agendamento.");
+            if(a.get("destino_agendado")!=null && destinos.stream().noneMatch(p->Objects.equals(p.get("id"),a.get("destino_agendado"))))
+                erro(HttpStatus.CONFLICT,"Há confirmação com destino inválido. Atualize o agendamento.");
         }
         Long id=db.queryForObject("INSERT INTO viagens(rota_id,motorista_usuario_id,rota_nome,motorista_nome,placa,data_servico,trajeto,iniciada_em,veiculo_id) VALUES(?,?,?,?,?,?,?,?,?) RETURNING id",Long.class,dados.rotaId(),u.id(),r.get("nome"),r.get("motorista_nome"),r.get("placa"),hoje(),dados.trajeto(),agora(),escolhido);
         db.update("INSERT INTO viagem_paradas(viagem_id,parada_original_id,ordem,local,referencia,horario,tipo,endereco,latitude,longitude) SELECT ?,id,ordem,local,referencia,horario,tipo,endereco,latitude,longitude FROM paradas WHERE rota_id=? AND trajeto=?",id,dados.rotaId(),dados.trajeto());
         for(var a:alunos) {
             var p=paradas.stream().filter(parada->numero(parada.get("id"))==numero(a.get(coluna))).findFirst().orElseThrow();
-            db.update("INSERT INTO participantes(viagem_id,aluno_id,aluno_nome,embarque_ordem) VALUES(?,?,?,?)",id,a.get("id"),a.get("nome"),p.get("ordem"));
+            Object destino=paradas.stream().filter(d->Objects.equals(d.get("id"),a.get("destino_agendado"))).map(d->d.get("ordem")).findFirst().orElse(null);
+            db.update("INSERT INTO participantes(viagem_id,aluno_id,aluno_nome,embarque_ordem,destino_ordem) VALUES(?,?,?,?,?)",id,a.get("id"),a.get("nome"),p.get("ordem"),destino);
         }
         evento(u,id,"VIAGEM",id,"INICIAR",alunos.size()+" alunos confirmados; itinerário fixado.");
+        omitirParadasSemPassageiros(u,id);
         return viagem(u,id);
+    }
+    private void omitirParadasSemPassageiros(UsuarioPrincipal u,Long id) {
+        var v=unico("SELECT trajeto,ponto_atual FROM viagens WHERE id=?",id);
+        if(!v.get("trajeto").equals("VOLTA")) return;
+        int ponto=(int)numero(v.get("ponto_atual"));
+        while(true) {
+            var paradas=lista("SELECT tipo,local FROM viagem_paradas WHERE viagem_id=? AND ordem=?",id,ponto);
+            // Não omitir embarques nem paradas mistas, mesmo sem confirmações.
+            if(paradas.isEmpty()||!paradas.getFirst().get("tipo").equals("DESEMBARQUE")) break;
+            if(contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND (status='PENDENTE' OR (status='PRESENTE' AND desembarque_em IS NULL)) AND (destino_ordem IS NULL OR destino_ordem=?)",id,ponto)>0) break;
+            String motivo="Nenhum passageiro a desembarcar neste ponto da volta.";
+            db.update("UPDATE viagem_paradas SET omitida_em=?,motivo_omissao=? WHERE viagem_id=? AND ordem=?",agora(),motivo,id,ponto);
+            evento(u,id,"VIAGEM",id,"OMITIR_PARADA","Parada "+ponto+" ("+paradas.getFirst().get("local")+"): "+motivo);
+            ponto++;
+        }
+        db.update("UPDATE viagens SET ponto_atual=? WHERE id=?",ponto,id);
     }
     @Transactional(isolation=Isolation.READ_COMMITTED)
     public Map<String,Object> agir(UsuarioPrincipal u,Long id,Acao dados) {
@@ -190,6 +230,8 @@ public class OperacaoService {
                 var p=unico("SELECT * FROM participantes WHERE viagem_id=? AND aluno_id=?",id,dados.alunoId());
                 if(!p.get("status").equals("PRESENTE")) erro(HttpStatus.CONFLICT,"Somente alunos presentes podem desembarcar.");
                 if(p.get("desembarque_em")!=null) erro(HttpStatus.CONFLICT,"Desembarque já registrado.");
+                if(p.get("destino_ordem")!=null && numero(p.get("destino_ordem"))!=ponto)
+                    erro(HttpStatus.CONFLICT,"Confirme o desembarque no destino escolhido pelo aluno.");
                 db.update("UPDATE participantes SET desembarque_em=?,desembarque_ordem=? WHERE viagem_id=? AND aluno_id=?",agora(),ponto,id,dados.alunoId());
                 evento(u,id,"ALUNO",dados.alunoId(),"DESEMBARCAR","Desembarque confirmado na parada "+ponto);
             }
@@ -197,10 +239,13 @@ public class OperacaoService {
                 if(!noPonto||ponto>total) erro(HttpStatus.CONFLICT,"Confirme a chegada à parada antes de concluí-la.");
                 if(contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND embarque_ordem=? AND status='PENDENTE'",id,ponto)>0)
                     erro(HttpStatus.CONFLICT,"Registre os alunos pendentes desta parada.");
+                if(contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PRESENTE' AND desembarque_em IS NULL AND destino_ordem<=?",id,ponto)>0)
+                    erro(HttpStatus.CONFLICT,"Confirme os desembarques previstos neste ponto antes de avançar.");
                 if(ponto==total && contar("SELECT count(*) FROM viagem_paradas WHERE viagem_id=? AND tipo IN ('DESEMBARQUE','AMBOS')",id)>0
                     && contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PRESENTE' AND desembarque_em IS NULL",id)>0)
                     erro(HttpStatus.CONFLICT,"Confirme os desembarques antes de concluir a última parada.");
                 db.update("UPDATE viagens SET ponto_atual=ponto_atual+1,no_ponto=false WHERE id=?",id);
+                omitirParadasSemPassageiros(u,id);
             }
             case "ENCERRAR" -> {
                 if(ponto<=total||contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PENDENTE'",id)>0)
@@ -222,7 +267,7 @@ public class OperacaoService {
         String filtro="";List<Object> args=new ArrayList<>(List.of(inicio,fim));
         if(rotaId!=null) { filtro+=" AND v.rota_id=?";args.add(rotaId); }
         if(u.perfil().equals("RESPONSAVEL")) { filtro+=" AND "+ACESSO+"";args.add(u.id()); }
-        var presencas=lista("SELECT p.*,v.rota_id,v.rota_nome,v.data_servico,v.trajeto,v.status AS viagem_status FROM participantes p JOIN viagens v ON v.id=p.viagem_id JOIN alunos a ON a.id=p.aluno_id WHERE v.data_servico BETWEEN ? AND ?"+filtro+" ORDER BY v.data_servico DESC,v.id,p.aluno_nome",args.toArray());
+        var presencas=lista("SELECT p.*,v.rota_id,v.rota_nome,v.data_servico,v.trajeto,v.status AS viagem_status,e.local AS embarque_local,d.local AS destino_local FROM participantes p JOIN viagens v ON v.id=p.viagem_id JOIN alunos a ON a.id=p.aluno_id LEFT JOIN viagem_paradas e ON e.viagem_id=p.viagem_id AND e.ordem=p.embarque_ordem LEFT JOIN viagem_paradas d ON d.viagem_id=p.viagem_id AND d.ordem=p.destino_ordem WHERE v.data_servico BETWEEN ? AND ?"+filtro+" ORDER BY v.data_servico DESC,v.id,p.aluno_nome",args.toArray());
         long presentes=presencas.stream().filter(p->p.get("status").equals("PRESENTE")).count();
         long ausentes=presencas.stream().filter(p->p.get("status").equals("AUSENTE")).count();
         Map<String,Object> resposta=new LinkedHashMap<>(); resposta.put("presencas",presencas);

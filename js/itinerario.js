@@ -8,6 +8,7 @@ elementoItinerario.innerHTML = `<div class="modal-dialog modal-xl modal-dialog-s
   <div class="modal-header"><h2 class="modal-title h5" id="itinerario-titulo"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
   <div class="modal-body"><p>Defina a sequência de paradas para cada trajeto. Horários são previstos, no horário local; não representam embarques registrados.</p>
     <p id="itinerario-status" role="status" aria-live="polite"></p>
+    <button type="button" id="itinerario-rota11" class="btn btn-outline-primary mb-3" hidden>Usar modelo da rota 11</button>
     <button type="button" id="itinerario-recarregar" class="btn btn-outline-primary mb-3" hidden>Tentar carregar novamente</button>
     <form id="itinerario-form"></form>
   </div><div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Fechar</button><button type="submit" form="itinerario-form" class="btn btn-primary" id="itinerario-salvar" disabled>Salvar itinerário</button></div>
@@ -66,6 +67,7 @@ function bloquearItinerario(bloqueado) {
 async function carregarItinerario(rota) {
   itinerarioAtual = null; itinerarioAlterado = false;
   formularioItinerario.innerHTML = '';
+  document.getElementById('itinerario-rota11').hidden=true;
   document.getElementById('itinerario-recarregar').hidden = true;
   document.getElementById('itinerario-status').textContent = 'Carregando itinerário…';
   bloquearItinerario(true);
@@ -73,6 +75,7 @@ async function carregarItinerario(rota) {
     const dados = await apiCadastros.itinerario(rota.id);
     itinerarioAtual = { ...dados, rotaId: rota.id };
     desenharParadas(dados.paradas);
+    document.getElementById('itinerario-rota11').hidden=dados.paradas.length>0;
     document.getElementById('itinerario-status').textContent = `${dados.paradas.length} paradas cadastradas.`;
   } catch (erro) {
     document.getElementById('itinerario-status').textContent = erro.message;
@@ -87,6 +90,12 @@ function abrirItinerario(id) {
   document.getElementById('itinerario-titulo').textContent = `Itinerário — ${rota.nome}`;
   modalItinerario.show(); carregarItinerario(rota);
 }
+document.getElementById('itinerario-rota11').onclick=()=>{
+  if(itinerarioOcupado||!itinerarioAtual||lerParadas().length) return;
+  desenharParadas(modeloRota11());itinerarioAlterado=true;
+  document.getElementById('itinerario-rota11').hidden=true;
+  document.getElementById('itinerario-status').textContent='Modelo carregado para revisão. Os horários das aulas estão nas referências. Preencha os horários do ônibus nas instituições e na volta antes de salvar; em ensaios, identifique os horários simulados.';
+};
 formularioItinerario.addEventListener('input', e => {
   itinerarioAlterado = true;
   if (e.target.dataset.campo === 'local') e.target.setCustomValidity('');
@@ -97,6 +106,7 @@ formularioItinerario.addEventListener('click', e => {
   if (!botao || itinerarioOcupado) return;
   if(botao.hasAttribute('data-mapa')){abrirMapaPonto(botao.closest('[data-parada]'));return;}
   const lista = lerParadas();
+  document.getElementById('itinerario-rota11').hidden=true;
   if (botao.dataset.adicionar) {
     lista.push({ trajeto: botao.dataset.adicionar, local:'', referencia:'', horario:'', tipo:'EMBARQUE' });
   } else {

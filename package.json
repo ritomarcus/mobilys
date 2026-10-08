@@ -11,7 +11,9 @@
     "test:operacao:browser": "node tests/operacao.browser.cjs",
     "test:localizacao": "node tests/localizacao.integration.cjs",
     "test:modelo": "node tests/modelo.integration.cjs",
-    "test:modelo:browser": "node tests/modelo.browser.cjs"
+    "test:modelo:browser": "node tests/modelo.browser.cjs",
+    "test:rota11": "node tests/rota11.integration.cjs",
+    "test:rota11:browser": "node tests/rota11.browser.cjs"
   },
   "devDependencies": {
     "playwright-core": "1.58.2"

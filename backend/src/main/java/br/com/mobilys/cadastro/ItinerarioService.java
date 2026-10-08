@@ -66,6 +66,8 @@ public class ItinerarioService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"A parada é um embarque autorizado. Ajuste os vínculos antes de mudar a operação.");
         if(db.queryForObject("SELECT count(*) FROM agendamentos g JOIN paradas p ON p.id=g.parada_id WHERE g.status='CONFIRMADO' AND g.data_servico>=(now() AT TIME ZONE 'America/Sao_Paulo')::date AND (p.trajeto<>g.trajeto OR p.tipo='DESEMBARQUE')",Integer.class)>0)
             throw new ResponseStatusException(HttpStatus.CONFLICT,"A parada tem confirmações. Cancele-as antes de alterar trajeto ou operação.");
+        if(db.queryForObject("SELECT count(*) FROM agendamentos g JOIN alunos a ON a.id=g.aluno_id JOIN paradas d ON d.id=g.destino_id JOIN paradas e ON e.id=g.parada_id WHERE g.status='CONFIRMADO' AND g.data_servico>=(now() AT TIME ZONE 'America/Sao_Paulo')::date AND (d.rota_id<>a.rota_id OR d.trajeto<>g.trajeto OR d.tipo='EMBARQUE' OR d.ordem<e.ordem)",Integer.class)>0)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"A alteração invalida um destino confirmado. Cancele a confirmação antes de alterar o itinerário.");
         db.update("UPDATE rotas SET versao_itinerario=versao_itinerario+1 WHERE id=?", rotaId);
         return resposta(rotaId, atual+1);
     }

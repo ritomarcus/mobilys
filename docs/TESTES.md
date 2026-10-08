@@ -34,3 +34,26 @@ Essas verificações não incluem teste de carga, auditoria independente de
 segurança, certificação de acessibilidade, dispositivos móveis físicos nem
 avaliação com participantes. A correspondência entre o DER aprovado e o banco
 implementado está no [guia de adequação](ADEQUACAO-MODELO-APROVADO.md).
+
+## Complemento — rota 11 e migração V8, 08/10/2026
+
+- `mvn package`, com `DB_TEST_URL` no banco isolado: oito testes Java, sem
+  falhas. Inclui viagem antiga sem destino e preservação de parada mista.
+- `npm.cmd test`: quatro testes do cliente HTTP aprovados.
+- Suítes HTTP de segurança, itinerário, operação, localização e modelo:
+  aprovadas após V8.
+- `test:rota11`: destinos independentes, validação, ponto compartilhado,
+  seis omissões auditadas, isolamento e snapshot histórico aprovados.
+- `test:rota11:browser`: modelo de cadastro, ida/volta completas, destinos,
+  filtros de frequência (50%/100%/75%), CSV e layout em 320/390/1440 pixels
+  aprovados no frontend empacotado.
+- `api.browser.cjs` e `modelo.browser.cjs`: regressões de cadastros, vínculos,
+  itinerário, pontos autorizados, mapa, inativação e layout aprovadas após V8.
+
+As capturas e o manifesto estão em [evidencias/rota11](evidencias/rota11/);
+o [relato do ensaio](ENSAIO-ROTA-11.md) descreve método, resultados e limites.
+Essas evidências usam dados fictícios e horários complementares simulados.
+O ensaio de navegador da rota 11 foi repetido após informar os horários das
+aulas (19:00 em ambas; término 22:00 no SENAC e 22:15 no IF). As referências
+acadêmicas e horários simulados do ônibus foram atualizados, com novas capturas;
+as verificações continuaram aprovadas.

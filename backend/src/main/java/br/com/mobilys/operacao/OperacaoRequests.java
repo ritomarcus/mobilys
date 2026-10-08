@@ -5,7 +5,12 @@ public class OperacaoRequests {
     public record Vinculo(@Positive Long responsavelUsuarioId, @Positive Long paradaIdaId, @Positive Long paradaVoltaId) {}
     public record Agenda(@NotNull @Positive Long alunoId, @NotNull LocalDate data,
         @NotBlank @Pattern(regexp="IDA|VOLTA") String trajeto,
-        @NotBlank @Pattern(regexp="CONFIRMADO|CANCELADO") String status, @Positive Long paradaId) {}
+        @NotBlank @Pattern(regexp="CONFIRMADO|CANCELADO") String status, @Positive Long paradaId,
+        @Positive Long destinoId) {
+        public Agenda(Long alunoId,LocalDate data,String trajeto,String status,Long paradaId) {
+            this(alunoId,data,trajeto,status,paradaId,null);
+        }
+    }
     public record Iniciar(@NotNull @Positive Long rotaId,
         @NotBlank @Pattern(regexp="IDA|VOLTA") String trajeto, @Positive Long veiculoId) { public Iniciar(Long rotaId,String trajeto){this(rotaId,trajeto,null);} }
     public record Acao(@NotNull @PositiveOrZero Long versao,

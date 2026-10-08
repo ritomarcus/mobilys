@@ -38,7 +38,7 @@ editar sua própria conta exige entrar novamente. As variáveis de bootstrap
 podem ser removidas do `.env` após criar a conta.
 
 Se o backend já estava em execução, use Ctrl+C e execute novamente para carregar
-as alterações. Não precisa apagar o volume do banco. Flyway aplica as migrações até V7
+as alterações. Não precisa apagar o volume do banco. Flyway aplica as migrações até V8
 preservando alunos e rotas existentes.
 
 Abra **http://localhost:8080** para usar frontend e API na mesma origem.
@@ -143,6 +143,9 @@ o percurso. As alterações só são persistidas em **Salvar itinerário**.
 `VOLTA`), `ordem`, `local`, `referencia`, `horario` e `tipo` (`EMBARQUE`,
 `DESEMBARQUE` ou `AMBOS`), `endereco`, `latitude` e `longitude` opcionais.
 As coordenadas devem ser informadas juntas e podem ser escolhidas no mapa.
+Em itinerários vazios, **Usar modelo da rota 11** preenche os vinte pontos para
+revisão. Os horários não informados permanecem em branco até o administrador
+preenchê-los; nenhuma alteração é gravada antes de **Salvar itinerário**.
 A ordem de cada trajeto começa em 1 e não tem lacunas.
 
 O servidor preserva os IDs ao editar e reordenar. A gravação é transacional e
@@ -206,6 +209,17 @@ Em cada ponto, o motorista registra chegada e presença/ausência. Deve resolver
 as presenças pendentes antes de avançar. Pode corrigir enquanto estiver no ponto;
 as correções ficam na auditoria. Ao concluir todas as paradas, encerra a viagem.
 As viagens ativas continuam acessíveis depois da meia-noite, pela mesma ID.
+Cada confirmação pode selecionar `destinoId`: parada de desembarque/ambos
+da mesma rota e trajeto, a partir do embarque escolhido. Com único destino
+compatível, o servidor o seleciona; com vários, a escolha é obrigatória.
+Viagens fixam o destino na coluna `destino_ordem` dos participantes. Desembarcar
+fora dele ou avançar com desembarque previsto ainda pendente retorna 409.
+
+Na volta, o avanço omite automaticamente os próximos pontos exclusivos de
+desembarque sem passageiros presentes a bordo ou pendentes destinados a eles.
+Embarques, pontos mistos e ida não são omitidos. Destino desconhecido em viagem
+antiga preserva os pontos enquanto o aluno estiver a bordo ou pendente.
+Cada omissão tem `omitida_em`, `motivo_omissao` e evento `OMITIR_PARADA`.
 Data de serviço usa America/Sao_Paulo; instantes vêm do servidor em UTC.
 
 Alterações de vínculos/alunos e veículos em viagem são bloqueadas. Agendamentos do trajeto
@@ -235,6 +249,8 @@ As ações são `CHEGAR`, `PRESENCA`, `AVANCAR` e `ENCERRAR`. A presença aceita
 `paradaVoltaId`. A agenda recebe `alunoId`, `data`, `trajeto` (`IDA`/`VOLTA`) e
 `status` (`CONFIRMADO`/`CANCELADO`) e `paradaId` opcional. Sem `paradaId`, usa o
 ponto padrão; a confirmação sempre exige um ponto autorizado para o trajeto.
+O corpo da agenda também aceita `destinoId`. O histórico inclui `embarque_local`
+e `destino_local` do itinerário fixado; filtros de trajeto e CSV usam esses registros.
 
 Histórico e relatórios incluem filtros, frequência, CSV e impressão/PDF.
 Frequência considera presentes e ausentes; pendentes e cancelamentos são
@@ -265,6 +281,8 @@ npm run test:operacao:browser
 npm run test:localizacao
 npm run test:modelo
 npm run test:modelo:browser
+npm run test:rota11
+npm run test:rota11:browser
 ```
 
 Os testes deixam dados no banco isolado, pois viagens e auditoria são

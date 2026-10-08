@@ -1,0 +1,56 @@
+{
+  "executadoEm": "2026-10-08T23:13:06.518Z",
+  "ambiente": "Banco isolado; Edge headless; passageiros fictícios; horários complementares simulados; GPS não compartilhado.",
+  "rota": "Rota 11 — demonstração A23f289e881",
+  "viagens": {
+    "ida": 46,
+    "volta": 47
+  },
+  "resultados": {
+    "registros": 4,
+    "presentes": 3,
+    "ausentes": 1,
+    "pontosOmitidosNaVolta": 6,
+    "frequenciaIda": 50,
+    "frequenciaVolta": 100,
+    "frequenciaCombinada": 75
+  },
+  "fontesSha256": {
+    "js/operacao.js": "534405b97f92607d247f332d4058c257d752804bd8f45ab7f3ef3b485cabd2e3",
+    "js/rota11.js": "968ce9198b9b575d3e5cb04a0872b16c17f2600527b8e4ad22d8d914834adc2b",
+    "css/operacao.css": "ec266eb23b83e3b19691e5838e4296c4c240d0100b9cb27a8104a915ce3f8f04",
+    "backend/src/main/java/br/com/mobilys/operacao/OperacaoService.java": "2f6277184307a1c0a38c15d313c69dac3c543263cdef24e16ce06cef70b2f19f",
+    "backend/src/main/resources/db/migration/V8__destinos_e_paradas_omitidas.sql": "5ec77f725b7cb41e687471116ab66de09c8c80c228cf497164f653b9f3c7354f",
+    "tests/rota11.browser.cjs": "13335a532e62bfadb95fa3f3ba9ce0d459531091037c134910ce8ced5d9c0ccd"
+  },
+  "evidencias": [
+    {
+      "arquivo": "itinerario.png",
+      "cenario": "Itinerário completo: horários complementares explicitamente simulados."
+    },
+    {
+      "arquivo": "agenda-celular.png",
+      "cenario": "Confirmações independentes de ida e volta com destino escolhido."
+    },
+    {
+      "arquivo": "volta-desktop.png",
+      "cenario": "SENAC → IF → Posto Major → Escola João Borges; seis pontos omitidos."
+    },
+    {
+      "arquivo": "acompanhamento-celular.png",
+      "cenario": "Família acompanha o destino de seu aluno e as omissões, sem acesso ao outro passageiro."
+    },
+    {
+      "arquivo": "relatorio-desktop.png",
+      "cenario": "Relatório das duas viagens: três presenças e uma ausência (75% combinado)."
+    },
+    {
+      "arquivo": "relatorio-ida.png",
+      "cenario": "Ida filtrada: uma presença, uma ausência e frequência de 50%."
+    },
+    {
+      "arquivo": "relatorio-volta.png",
+      "cenario": "Volta filtrada: duas presenças e frequência de 100%."
+    }
+  ]
+}

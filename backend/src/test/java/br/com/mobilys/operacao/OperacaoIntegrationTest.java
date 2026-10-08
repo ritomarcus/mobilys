@@ -24,6 +24,30 @@ class OperacaoIntegrationTest {
     @MockitoBean Clock clock;
 
     @Test
+    void preservaDestinoDesconhecidoEParadaMistaNaVoltaAntiga() {
+        when(clock.instant()).thenReturn(Instant.parse("2026-10-08T22:00:00Z"));
+        long usuario=db.queryForObject("INSERT INTO usuarios(nome,email,senha_hash,perfil) VALUES('Legado','legado@teste.local','hash','MOTORISTA') RETURNING id",Long.class);
+        long rota=db.queryForObject("INSERT INTO rotas(nome,turno,origem,destino) VALUES('Volta legada','Noite','Origem','Destino') RETURNING id",Long.class);
+        long aluno=db.queryForObject("INSERT INTO alunos(nome,matricula,turma,responsavel,rota_id) VALUES('Aluno legado','LEGADO','Noite','Responsável',?) RETURNING id",Long.class,rota);
+        long id=db.queryForObject("INSERT INTO viagens(rota_id,motorista_usuario_id,rota_nome,motorista_nome,placa,data_servico,trajeto,iniciada_em,no_ponto) VALUES(?,?,'Volta legada','Legado','LEG0001','2026-10-08','VOLTA',now(),true) RETURNING id",Long.class,rota,usuario);
+        for(int ordem=1;ordem<=4;ordem++)
+            db.update("INSERT INTO viagem_paradas(viagem_id,parada_original_id,ordem,local,referencia,horario,tipo) VALUES(?,?,?,?,'','22:00',?)",id,ordem,ordem,"Ponto "+ordem,ordem==1?"EMBARQUE":ordem==4?"AMBOS":"DESEMBARQUE");
+        db.update("INSERT INTO participantes(viagem_id,aluno_id,aluno_nome,embarque_ordem,status) VALUES(?,?,'Aluno legado',1,'PRESENTE')",id,aluno);
+        var u=new UsuarioPrincipal(usuario,"Legado","legado@teste.local","hash","MOTORISTA",0);
+        var v=operacao.agir(u,id,new Acao(0L,"AVANCAR",null,null));
+        assertThat(v.get("ponto_atual")).isEqualTo(2);
+        assertThat(db.queryForObject("SELECT count(*) FROM viagem_paradas WHERE viagem_id=? AND omitida_em IS NOT NULL",Integer.class,id)).isZero();
+        operacao.agir(u,id,new Acao(1L,"CHEGAR",null,null));
+        operacao.agir(u,id,new Acao(2L,"DESEMBARCAR",aluno,null));
+        v=operacao.agir(u,id,new Acao(3L,"AVANCAR",null,null));
+        assertThat(v.get("ponto_atual")).isEqualTo(4); // Ponto 3 omitido; AMBOS preservado.
+        assertThat(db.queryForObject("SELECT count(*) FROM eventos WHERE viagem_id=? AND acao='OMITIR_PARADA'",Integer.class,id)).isEqualTo(1);
+        operacao.agir(u,id,new Acao(4L,"CHEGAR",null,null));
+        operacao.agir(u,id,new Acao(5L,"AVANCAR",null,null));
+        assertThat(operacao.agir(u,id,new Acao(6L,"ENCERRAR",null,null)).get("status")).isEqualTo("ENCERRADA");
+    }
+
+    @Test
     void concluiDepoisDaMeiaNoitePreservandoDataDeServico() {
         var instante=new AtomicReference<>(Instant.parse("2026-10-07T02:59:00Z"));
         when(clock.instant()).thenAnswer(a->instante.get());

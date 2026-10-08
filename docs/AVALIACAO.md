@@ -22,9 +22,10 @@ delimitação.
 
 ## Limitações e aspectos negativos
 
-- No cenário da [rota 11](ROTA-11.md), a operação real omite pontos sem
-  passageiros na volta. O protótipo ainda exige concluir todas as paradas e
-  não vincula um destino obrigatório a cada passageiro para automatizar a regra.
+- A omissão automática da [rota 11](ROTA-11.md) depende do destino confirmado
+  e da presença registrada. Aplica-se somente à volta e a pontos exclusivos
+  de desembarque; pontos mistos são preservados. Viagens antigas sem destino
+  não permitem inferir quais pontos seriam dispensáveis para alunos a bordo.
 - O funcionamento depende de rede e backend disponível. Não há fila de ações
   offline nem recuperação automática de comandos não confirmados.
 - Navegadores móveis podem suspender GPS quando a tela apaga ou a página vai

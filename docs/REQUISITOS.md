@@ -37,6 +37,8 @@ administração validar o vínculo. Confirmação de uso não significa presenç
 | RF15 | Inativar usuários, veículos e rotas, revogando acesso e impedindo novas operações correspondentes | `modelo.integration.cjs`, `modelo.browser.cjs` |
 | RF16 | Escolher ponto autorizado na confirmação e veículo associado no início da viagem; associar vários motoristas/veículos à rota | Agenda e associações; `modelo.integration.cjs` |
 | RF17 | Persistir curso, período, telefone, CPF, validade da CNH, ano de fabricação e endereço/coordenadas; rejeitar CNH informada vencida ao iniciar | Cadastros e itinerário; `modelo.integration.cjs` |
+| RF18 | Selecionar destino por confirmação, fixá-lo na viagem e impedir desembarque fora dele e avanço com desembarques pendentes no ponto | `rota11.integration.cjs`, `rota11.browser.cjs` |
+| RF19 | Na volta, omitir pontos exclusivos de desembarque sem passageiros destinados a eles, preservando embarques, pontos mistos e auditoria | Migração V8; testes da rota 11 e regressão Java de viagens antigas |
 | RC01 | Compartilhar localização opcional durante a viagem e indicar idade/precisão da leitura | Geolocation + Leaflet; API restrita; `localizacao.integration.cjs` |
 | RC02 | Confirmar desembarque individual, com horário e parada próprios | Ação DESEMBARCAR; `localizacao.integration.cjs` |
 
@@ -47,7 +49,7 @@ introdução. Nenhum dado fictício é convertido em presença ou localização 
 
 | ID | Requisito | Verificação / limite |
 | --- | --- | --- |
-| RNF01 | Persistência relacional e integridade | PostgreSQL, chaves estrangeiras, unicidade, Flyway V1–V7 |
+| RNF01 | Persistência relacional e integridade | PostgreSQL, chaves estrangeiras, unicidade, Flyway V1–V8 |
 | RNF02 | Autorização no servidor e isolamento entre contas | Casos 401/403/404, CSRF e revogação de sessão |
 | RNF03 | Senhas protegidas | BCrypt; hash não exposto; senha atual exigida na troca pessoal |
 | RNF04 | Interface adaptável a celular e desktop | Testes em larguras 320, 390 e 1440 px; sem rolagem horizontal do documento |
@@ -84,6 +86,12 @@ usa um bloqueio transacional compartilhado nas escritas operacionais.
 10. GPS não comprova presença nem desembarque. Requer ação e permissão do
     motorista. Ao sair da página, a coleta para; uma posição sem atualização
     por mais de 90 segundos é indicada como antiga.
+11. Destino pertence à mesma rota/trajeto e permite desembarque a partir do
+    embarque escolhido; um único destino compatível pode ser selecionado
+    automaticamente. Rotas legadas que só têm embarques permanecem aceitas.
+12. Somente a volta omite automaticamente pontos exclusivos de desembarque.
+    Presentes a bordo e pendentes preservam seus destinos; destino desconhecido
+    impede omissão enquanto o passageiro estiver pendente ou a bordo.
 
 ## Atendimento dos objetivos acadêmicos
 

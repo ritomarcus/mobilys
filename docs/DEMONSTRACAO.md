@@ -34,12 +34,26 @@ não são inseridos automaticamente.
 
 Use o [cenário completo da rota 11](ROTA-11.md) como referência para cadastrar
 as dez paradas de cada trajeto: oito pontos em Aguaí e duas instituições.
-Na ida, os horários informados vão de 18:00 a 18:25; depois o veículo passa
-no IF e no SENAC. Na volta, passa no SENAC, no IF e nos oito pontos em ordem
-inversa. Os horários das instituições e de todo o retorno não foram informados.
-Como o cadastro exige horário em cada parada, use valores provisórios somente
-para o ensaio, identificados na referência da parada como “Horário simulado
-para demonstração”; não os apresente como horários reais da rota.
+Em um itinerário vazio, **Usar modelo da rota 11** carrega esses pontos para
+revisão; complete os horários pendentes antes de salvar.
+Na ida, os horários de embarque informados vão de 18:00 a 18:25; depois o
+veículo passa no IF e no SENAC. Na volta, passa no SENAC, no IF e nos oito
+pontos em ordem inversa.
+
+| Instituição | Início das aulas | Término das aulas |
+| --- | --- | --- |
+| IF | 19:00 | 22:15 |
+| SENAC | 19:00 | 22:00 |
+
+Os horários da tabela são acadêmicos, informados pelo autor. O modelo registra
+essa informação na referência das instituições. Os horários exatos de
+chegada e embarque do ônibus no IF e no SENAC e os desembarques em Aguaí na
+volta ainda precisam ser confirmados; os respectivos campos de horário
+permanecem vazios no modelo. Como o cadastro exige horário em cada parada,
+use valores provisórios somente para o ensaio, identificados na referência
+da parada como “Horário simulado para demonstração”; não os apresente como
+horários reais da rota. Preserve a referência aos horários das aulas ao
+acrescentar a indicação de simulação.
 
 Cadastre dois alunos (por exemplo, “Aluno demonstração A” e “Aluno demonstração
 B”), cada um com matrícula distinta. Em **Responsáveis**, cadastre os responsáveis
@@ -47,8 +61,8 @@ vinculados às contas. Em **Alunos → Vínculos**, selecione o responsável e i
 o parentesco. Para A, autorize Escola João Borges na ida e IF na volta;
 para B, autorize Posto Major na ida e SENAC na volta. No cenário, A desembarca
 no IF na ida e na Escola João Borges na volta; B desembarca no SENAC na ida
-e no Posto Major na volta. Esses destinos são definidos pelo roteiro, pois o
-cadastro atual vincula pontos de embarque, sem destino individual obrigatório.
+e no Posto Major na volta. Na agenda, selecione esses destinos no campo
+**Ponto de desembarque**, independentemente para cada trajeto.
 Horários previstos não impedem a demonstração fora desse horário;
 os eventos reais usam o instante atual do servidor.
 
@@ -63,20 +77,21 @@ os eventos reais usam o instante atual do servidor.
 | 5. Acompanhamento, 1 min | Na família A, abrir a viagem; opcionalmente ativar GPS no motorista | Presença registrada e última posição autorizada |
 | 6. Desembarque, 1 min | Chegar ao IF, confirmar desembarque de A, concluir SENAC e encerrar | Desembarque individual e fim de viagem distintos |
 | 7. Relatórios, 2 min | Filtrar rota/aluno, consultar frequência, auditoria e exportar CSV | 1 presente e 1 ausente produzem 50% na ida filtrada |
-| 8. Volta e conclusão, 2 min | Iniciar volta, mostrar SENAC antes do IF e explicar o retorno pelos pontos em ordem inversa | Presença de ida não é copiada para volta; explicar a regra real de omitir pontos sem passageiros e a limitação atual |
+| 8. Volta e conclusão, 2 min | Iniciar volta, mostrar SENAC antes do IF e o retorno pelos pontos em ordem inversa | Presença de ida não é copiada; pontos de desembarque sem passageiros são omitidos e auditados |
 
 Se houver outros registros no período, filtre pela rota/nome exclusivo da
 apresentação antes de falar em 50%. Para demonstrar todo o percurso de volta,
 registre B presente no SENAC e A presente no IF; desembarque B no Posto Major
 e A na Escola João Borges. A ausência de B na ida não impede sua confirmação
-e presença na volta. Reserve mais tempo para percorrer as dez paradas; os
+e presença na volta. Após concluir Posto Major, os seis pontos sem passageiros
+são pulados e o destino seguinte é Escola João Borges. Reserve tempo para
+demonstrar também a auditoria; os
 12 a 15 minutos são uma estimativa para um ensaio já preparado.
 
-O sistema atual exige chegada e conclusão de todas as paradas cadastradas.
-Nos pontos intermediários sem alunos, demonstre essa sequência como limitação
-do protótipo, sem afirmar que o motorista para nesses locais na operação real.
-A omissão de pontos sem passageiros é um cenário de evolução descrito em
-[Rota 11](ROTA-11.md), ainda não uma funcionalidade implementada.
+No relatório, use o filtro **Trajeto**: ida gera 50%, volta gera 100% e ambos
+geram 75% neste cenário. Exporte o CSV para mostrar embarque e destino.
+Consulte o [ensaio automatizado da rota 11](ENSAIO-ROTA-11.md) para as capturas
+e resultados; ele não substitui avaliação com participantes ou uso em campo.
 
 ## Casos de falha úteis para a banca
 
@@ -87,6 +102,8 @@ A omissão de pontos sem passageiros é um cenário de evolução descrito em
 - Negar permissão ao GPS: a viagem continua utilizável com mensagem explícita.
 - Pausar GPS: a posição deixa de ser disponibilizada aos acompanhantes.
 - Mostrar que ausência, cancelamento e pendência são estados diferentes.
+- Tentar desembarcar um aluno fora do destino escolhido: operação recusada.
+- Tentar concluir o destino com passageiro a bordo: operação recusada.
 
 ## GPS no computador e no celular
 
@@ -107,8 +124,9 @@ As imagens em [evidencias](evidencias/) são capturas da aplicação pelo teste
 automatizado com dados fictícios, não de operação em campo. O teste substitui
 os tiles públicos por uma imagem neutra e fornece coordenadas controladas;
 o mapa cinza nessas capturas evita acessos automatizados ao serviço de mapas.
-Essas capturas são do cenário técnico anterior e não comprovam uma execução
-da rota 11. Para o TCC com esta rota, produza novas capturas durante o ensaio.
+As três capturas abaixo são do cenário técnico anterior. As novas capturas
+da rota 11 estão em [evidencias/rota11](evidencias/rota11/) e são descritas no
+[registro do ensaio](ENSAIO-ROTA-11.md).
 
 - [Acompanhamento no celular](evidencias/acompanhamento-celular.png)
 - [Viagem no desktop](evidencias/viagem-desktop.png)

@@ -21,6 +21,8 @@ HTML, CSS, JavaScript e Bootstrap; backend Java 21/Spring Boot 4.1.1 e PostgreSQ
 - Desembarque individual em paradas compatíveis e troca da própria senha.
 - Responsáveis com CPF/telefone, vários vínculos por aluno e parentesco; conta própria opcional do aluno.
 - Pontos com endereço/coordenadas, escolha de embarque por confirmação e associações adicionais de veículos/motoristas às rotas.
+- Destino por confirmação, desembarque no ponto escolhido e omissão auditada de pontos sem passageiros na volta.
+- Modelo da rota 11 para revisão no editor e filtro de ida/volta nos relatórios e CSV.
 - Inativação de usuários, rotas e veículos; campos cadastrais previstos no modelo aprovado.
 
 O login não aceita mais credenciais fictícias nem perfil escolhido pela URL.
@@ -68,6 +70,7 @@ pode redefinir senhas em Usuários. O acesso atual é destinado ao desenvolvimen
 - [Modelagem UML e estrutura relacional](docs/MODELAGEM.md)
 - [Roteiro de demonstração](docs/DEMONSTRACAO.md)
 - [Rota 11: percurso e cenários de demonstração do TCC](docs/ROTA-11.md)
+- [Ensaio da rota 11, resultados e capturas para o TCC](docs/ENSAIO-ROTA-11.md)
 - [Análise qualitativa técnica e protocolo de avaliação](docs/AVALIACAO.md)
 - [Geolocalização: funcionamento e limites](docs/GEOLOCALIZACAO.md)
 
@@ -92,6 +95,8 @@ Instale as dependências de teste com `npm install`.
 - `npm run test:localizacao`: permissões e validade do GPS, desembarque e troca de senha.
 - `npm run test:modelo`: vínculos N:N, novos campos, inativação, pontos e associações de rota.
 - `npm run test:modelo:browser`: novos cadastros e vínculos na interface, usando o frontend empacotado.
+- `npm run test:rota11`: destinos, ida/volta, pontos compartilhados, omissões auditadas e histórico preservado.
+- `npm run test:rota11:browser`: fluxo da rota 11 no Edge, filtro de trajeto, CSV e capturas em `docs/evidencias/rota11`.
 
 Os testes de integração exigem API e PostgreSQL em execução. O teste de navegador abre
 seu frontend na porta 5501; permita essa origem em `FRONTEND_ORIGINS`. Consulte
