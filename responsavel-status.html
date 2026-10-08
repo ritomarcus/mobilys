@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="sessao-pendente">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/refinamentos.css">
+<style>.sessao-pendente #conteudo { visibility: hidden; }</style>
+<link rel="stylesheet" href="css/operacao.css">
+<link rel="stylesheet" href="css/mobilys.css">
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
 </head>
 <body class="experiencia aluno-page">
 
@@ -39,17 +43,7 @@
     <div class="row">
       <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral" aria-label="Navegação principal"></nav>
 
-      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1">
-        <header class="cabecalho-secao"><div><p class="sobretitulo">Área do aluno e responsável</p><h1>Cada etapa, mais perto.</h1><p class="desc" id="rs-descricao">Acompanhe as etapas do transporte de Ana Beatriz.</p></div><span class="badge selo-info">Acompanhamento da demonstração</span></header>
-<section class="aluno-identidade" aria-label="Aluno vinculado"><span class="avatar-perfil" aria-hidden="true">AB</span><div><strong>Ana Beatriz Souza</strong><span>Matrícula 2026001 · Manhã</span></div><span class="aluno-rota"><i class="bi bi-bus-front" aria-hidden="true"></i> Rota 10 · São João da Boa Vista</span></section>
-        <div class="aluno-trajeto"><label for="rs-turno">Trajeto acompanhado</label><select class="form-select" id="rs-turno"><option value="ida">Ida à instituição</option><option value="volta">Volta para casa · fictícia</option></select></div><p class="vazio" id="rs-sem-viagem" hidden>Nenhuma viagem disponível. Associe o aluno a uma rota com itinerário.</p><div class="row g-4" id="rs-conteudo">
-          <section class="col-12 col-xl-8"><div class="card painel"><div class="card-header painel-cabecalho d-flex justify-content-between gap-2 align-items-center"><h2 class="m-0" id="rs-rota"></h2><span class="badge selo-pendente" id="rs-status">A caminho</span></div><div class="card-body p-4">
-            <div class="familia-status-resumo" aria-live="polite"><div><span class="sobretitulo">Situação do aluno</span><strong id="rs-aluno-situacao"></strong></div><div><span class="sobretitulo">Agora no percurso</span><strong id="rs-parada-atual"></strong></div></div><details class="familia-itinerario mb-4"><summary>Ver ilustração do percurso</summary><div class="mapa-ilustrado"><span class="mapa-legenda"><i class="bi bi-signpost-split"></i> Ilustração do trajeto · sem GPS</span><svg viewBox="0 0 600 260" role="img" aria-label="Esquema ilustrativo da rota entre Aguaí, o ponto de embarque e o destino"><path class="mapa-rua" d="M-20 100H620 M-20 220H620 M100-20V280 M320-20V280 M520-20V280"/><path class="mapa-rua" d="M-20 0L620 280"/><path class="mapa-rota" d="M100 190V100H320V220H520V100"/><circle class="mapa-pin" cx="100" cy="190" r="11"/><circle class="mapa-pin" cx="320" cy="160" r="13"/><circle class="mapa-pin" cx="520" cy="100" r="11"/><g fill="var(--primaria-900)" font-size="13" font-weight="700"><text id="rs-origem-mapa" x="55" y="245">Aguaí</text><text x="340" y="165">Seu ponto</text><text id="rs-destino-mapa" x="540" y="80">Destino</text></g></svg></div></details>
-            <div class="trilha" id="trilha-status" aria-label="Etapas da viagem"></div><p class="desc text-center mb-0" id="rs-mensagem" aria-live="polite"></p>
-          </div></div><div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mt-3"><p class="desc mb-0">As etapas são atualizadas pelo motorista nesta demonstração.</p><a class="btn btn-outline-primary" href="motorista-viagem.html">Abrir demonstração do motorista <i class="bi bi-arrow-right"></i></a></div></section>
-          <aside class="col-12 col-xl-4"><div class="card painel mb-3"><div class="card-body p-4"><p class="sobretitulo">Quem conduz a viagem</p><div class="d-flex align-items-center gap-3 mb-4"><span class="avatar-perfil">CE</span><div><h2 class="bloco-titulo">Carlos Eduardo</h2><span class="desc">Motorista de demonstração</span></div></div><hr><p class="desc mb-2"><i class="bi bi-bus-front me-2"></i>Veículo fictício · ABC-1D23</p><p class="desc mb-0" id="rs-ponto"></p></div></div><div class="card painel mb-3"><div class="card-body p-4"><p class="sobretitulo">Horário de chegada</p><h2 class="bloco-titulo" id="rs-chegada">Não informado</h2><p class="desc mb-0" id="rs-chegada-nota">O material informa apenas as saídas de Aguaí.</p></div></div><div class="card painel mb-3"><div class="card-body p-4"><h2 class="bloco-titulo">Instituições atendidas</h2><p class="desc mb-0" id="rs-instituicoes"></p></div></div><a class="acao-rapida" href="responsavel-agendamentos.html"><span class="icone"><i class="bi bi-calendar2-check"></i></span><div><div class="titulo">Meus agendamentos</div><div class="sub">Confira as confirmações do dia</div></div><i class="bi bi-chevron-right ms-auto"></i></a></aside>
-        </div>
-      </main>
+      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1"><p role="status">Carregando sua conta…</p></main>
     </div>
   </div>
 
@@ -67,9 +61,13 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-<script src="js/rotas.js"></script>
-<script src="js/dados.js"></script>
-<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/sistema.js"></script>
+<script src="js/conta.js"></script>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="js/operacao.js"></script>
+<script src="js/localizacao.js"></script>
 <script>iniciarPagina('resp-status');</script>
 </body>
 </html>

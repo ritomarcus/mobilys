@@ -1,0 +1,13 @@
+#op-conteudo, #op-detalhe { min-width: 0; overflow-wrap: anywhere; }
+#op-conteudo .tabela-scroll { overflow-x: auto; max-width: 100%; }
+.operacao-tabela { min-width: 640px; }
+#op-detalhe { scroll-margin-top: 100px; }
+@media print {
+  .topo-navbar, .nav-lateral, .nav-inferior, .rodape-app, .pular-conteudo,
+  #op-filtros, #op-busca, #op-situacao, button, #op-aviso { display: none !important; }
+  .conteudo { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+  .app-corpo { margin: 0 !important; padding: 0 !important; }
+  .tabela-scroll { overflow: visible !important; }
+  .operacao-tabela { min-width: 0; font-size: 10pt; }
+  .card { break-inside: avoid; }
+}

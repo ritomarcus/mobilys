@@ -2,8 +2,16 @@
   "name": "mobilys-prototipo",
   "private": true,
   "scripts": {
-    "test": "node --test tests/dados.test.cjs",
-    "test:browser": "node tests/browser.cjs"
+    "test": "node --test tests/api.test.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "test:api:browser": "node tests/api.browser.cjs",
+    "test:security": "node tests/security.integration.cjs",
+    "test:itinerario": "node tests/itinerario.integration.cjs",
+    "test:operacao": "node tests/operacao.integration.cjs",
+    "test:operacao:browser": "node tests/operacao.browser.cjs",
+    "test:localizacao": "node tests/localizacao.integration.cjs",
+    "test:modelo": "node tests/modelo.integration.cjs",
+    "test:modelo:browser": "node tests/modelo.browser.cjs"
   },
   "devDependencies": {
     "playwright-core": "1.58.2"

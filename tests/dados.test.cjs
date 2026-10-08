@@ -13,6 +13,38 @@ function ambiente() {
   const storage = { getItem: k => itens.get(k) || null, setItem: (k,v) => itens.set(k,v), removeItem: k => itens.delete(k) };
   return { storage, model: criarDadosMobilys(seed, storage) };
 }
+
+test('horarios persistem, preservam entrada repetida e excluem ausentes da saida', () => {
+  const { storage } = ambiente();
+  let instante = new Date('2026-09-30T08:00:00Z');
+  const model = criarDadosMobilys(seed, storage, () => new Date(instante));
+  model.agir(10, 'ida', 'iniciar');
+  model.agir(10, 'ida', 'avancar');
+  model.agir(10, 'ida', 'presenca', 1, 'presente');
+  const registro = () => model.db.historicoPresencas.find(p => p.viagemId && p.alunoId === 1);
+  assert.equal(registro().entradaEm, instante.toISOString());
+  assert.equal(registro().saidaEm, null);
+  instante = new Date('2026-09-30T08:01:00Z');
+  model.agir(10, 'ida', 'presenca', 1, 'presente');
+  assert.equal(registro().entradaEm, '2026-09-30T08:00:00.000Z');
+  model.agir(10, 'ida', 'presenca', 1, 'ausente');
+  assert.equal(registro().entradaEm, null);
+  model.agir(10, 'ida', 'presenca', 1, 'presente');
+  assert.equal(registro().entradaEm, instante.toISOString());
+  model.agir(10, 'ida', 'avancar');
+  for (let i = 1; i < 7; i++) {
+    model.agir(10, 'ida', 'avancar');
+    model.viagem(10, 'ida').alunos.filter(a => a.embarqueIndice === i).forEach(a => model.agir(10, 'ida', 'presenca', a.id, 'ausente'));
+    model.agir(10, 'ida', 'avancar');
+  }
+  instante = new Date('2026-09-30T09:00:00Z');
+  model.agir(10, 'ida', 'encerrar');
+  const nova = criarDadosMobilys(seed, storage, () => new Date(instante));
+  const registros = nova.db.historicoPresencas.filter(p => p.viagemId);
+  assert.equal(registros.find(p => p.alunoId === 1).saidaEm, instante.toISOString());
+  assert.ok(registros.filter(p => p.status === 'ausente').every(p => p.entradaEm === null && p.saidaEm === null));
+  assert.ok(nova.db.historicoPresencas.filter(p => !p.viagemId).every(p => !p.entradaEm && !p.saidaEm));
+});
 test('data local muda na virada do dia e preserva os registros anteriores', () => {
   const { storage } = ambiente();
   let instante = new Date(2026, 11, 31, 23, 59);

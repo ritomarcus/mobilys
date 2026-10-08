@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="sessao-pendente">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/refinamentos.css">
+<style>.sessao-pendente #conteudo { visibility: hidden; }</style>
+<link rel="stylesheet" href="css/operacao.css">
+<link rel="stylesheet" href="css/mobilys.css">
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
 </head>
 <body class="experiencia">
 
@@ -39,51 +43,7 @@
     <div class="row">
       <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral" aria-label="Navegação principal"></nav>
 
-      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1">
-        <header class="cabecalho-secao">
-          <div><p class="sobretitulo">Área do motorista</p><h1>Vamos para mais uma viagem?</h1><p class="desc">Olá, Carlos. Confira o trajeto e organize os embarques de demonstração.</p></div>
-          <span class="badge selo-info">Demonstração · 21 ago. 2026</span>
-        </header>
-        <div class="aluno-trajeto"><label for="mv-rota-select">Rota da demonstração</label><select class="form-select" id="mv-rota-select"></select></div><section class="faixa-viagem" aria-labelledby="mv-rota-nome">
-          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-            <div><p class="sobretitulo">Sua rota de hoje</p><h2 id="mv-rota-nome">Rota 10 — São João da Boa Vista</h2><p class="sub mb-0" id="mv-info"></p></div>
-            <span class="badge" id="mv-status-selo">Não iniciada</span>
-          </div>
-          <div class="viagem-detalhes"><span><i class="bi bi-bus-front"></i>ABC-1D23 · Veículo fictício</span><span id="mv-horarios"></span><span id="mv-destino"></span></div>
-          <div class="d-flex gap-2 mt-4 flex-wrap">
-            <button class="btn btn-light fw-semibold" id="btn-iniciar-viagem"><i class="bi bi-play-fill"></i>Iniciar viagem</button>
-            <button class="btn btn-outline-light fw-semibold d-none" id="btn-encerrar-viagem"><i class="bi bi-stop-fill"></i>Encerrar viagem</button>
-          </div>
-        </section>
-        <div class="resumo-grade" aria-live="polite">
-          <div class="resumo-item"><i class="bi bi-people"></i><div><strong id="mv-total">2</strong><span>Alunos previstos</span></div></div>
-          <div class="resumo-item"><i class="bi bi-person-check"></i><div><strong id="mv-presentes">0</strong><span>Presentes</span></div></div>
-          <div class="resumo-item"><i class="bi bi-hourglass-split"></i><div><strong id="mv-pendentes">2</strong><span>Aguardando registro</span></div></div>
-        </div>
-        <section class="card painel mb-4" aria-labelledby="mv-acompanhamento">
-          <div class="card-body p-4">
-            <div class="d-flex justify-content-between gap-3 flex-wrap"><div><p class="sobretitulo">Acompanhamento por parada</p><h2 class="bloco-titulo" id="mv-acompanhamento">Próximo embarque</h2></div><span class="badge selo-info align-self-start" id="mv-progresso-texto"></span></div>
-            <div class="timeline-scroll" id="mv-tracker" tabindex="0" role="region" aria-label="Etapas do embarque. Role horizontalmente para consultar todos os pontos."><ol class="timeline-embarques" id="mv-itinerario" aria-label="Pontos de embarque"></ol></div><p class="desc small d-lg-none">Deslize a linha para acompanhar todos os pontos.</p>
-            <h3 class="bloco-titulo" id="mv-ponto-atual"></h3><p class="desc" id="mv-ponto-info" aria-live="polite"></p>
-            <button class="btn btn-primary" id="mv-avancar-ponto" disabled>Cheguei ao ponto</button>
-            <p class="desc small mb-0 mt-3">Atualização manual nesta demonstração. A presença é registrada separadamente para cada aluno.</p>
-          </div>
-        </section>
-        <div class="row g-4">
-          <section class="col-12 col-xl-8" aria-labelledby="titulo-embarques">
-            <h2 class="bloco-titulo" id="titulo-embarques">Lista de embarque</h2><p class="desc" id="mv-orientacao">Inicie a viagem para registrar a presença dos alunos.</p>
-            <div class="d-flex flex-wrap gap-2 mb-3">
-              <div class="flex-grow-1"><label class="visually-hidden" for="busca-alunos-viagem">Buscar aluno</label><input type="search" class="form-control" id="busca-alunos-viagem" placeholder="Buscar pelo nome do aluno"></div>
-              <label class="visually-hidden" for="mv-turno-select">Trajeto</label><select class="form-select filtro-select" id="mv-turno-select"><option value="ida">Trajeto de ida</option><option value="volta">Trajeto de volta</option></select>
-            </div>
-            <div class="form-check mb-3"><input type="checkbox" class="form-check-input" id="mv-filtrar-ponto"><label class="form-check-label desc" for="mv-filtrar-ponto">Mostrar somente alunos do ponto atual</label></div><div class="lista-alunos-viagem" id="lista-alunos-viagem"></div>
-          </section>
-          <aside class="col-12 col-xl-4">
-            <div class="card painel mb-3"><div class="card-body p-4"><p class="sobretitulo">Informações da rota</p><h2 class="bloco-titulo" id="mv-trajeto-titulo">Do bairro até a escola</h2><h3 class="bloco-titulo mt-4">Instituições atendidas</h3><p class="desc mb-0" id="mv-instituicoes"></p></div></div>
-            <div class="nota-viagem"><i class="bi bi-info-circle"></i><span>Ida transcrita do material enviado. Itinerário e horários da volta, alunos, presenças e veículo são fictícios para demonstração.</span></div>
-          </aside>
-        </div>
-      </main>
+      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1"><p role="status">Carregando sua conta…</p></main>
     </div>
   </div>
 
@@ -101,9 +61,13 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-<script src="js/rotas.js"></script>
-<script src="js/dados.js"></script>
-<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/sistema.js"></script>
+<script src="js/conta.js"></script>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="js/operacao.js"></script>
+<script src="js/localizacao.js"></script>
 <script>iniciarPagina('motorista-viagem');</script>
 </body>
 </html>

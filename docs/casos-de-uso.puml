@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+skinparam monochrome true
+actor Administrador as A
+actor Motorista as M
+actor "Aluno / responsável" as R
+rectangle Mobilys {
+  usecase "Autenticar / sair" as Login
+  usecase "Alterar própria senha" as Senha
+  usecase "Gerenciar cadastros e vínculos" as Cadastro
+  usecase "Organizar itinerários" as Itinerario
+  usecase "Consultar relatórios e auditoria" as Relatorio
+  usecase "Confirmar / cancelar ida e volta" as Agenda
+  usecase "Consultar acompanhamento e histórico" as Consulta
+  usecase "Iniciar viagem" as Inicio
+  usecase "Registrar chegada e presença" as Presenca
+  usecase "Confirmar desembarque" as Saida
+  usecase "Concluir paradas e encerrar viagem" as Fim
+  usecase "Compartilhar / pausar localização" as GPS
+}
+A --> Login
+M --> Login
+R --> Login
+A --> Senha
+M --> Senha
+R --> Senha
+A --> Cadastro
+A --> Itinerario
+A --> Relatorio
+R --> Agenda
+R --> Consulta
+M --> Inicio
+M --> Presenca
+M --> Saida
+M --> Fim
+M --> GPS
+note bottom of Consulta
+  A conta vê somente seus alunos.
+  GPS depende de compartilhamento ativo.
+end note
+@enduml

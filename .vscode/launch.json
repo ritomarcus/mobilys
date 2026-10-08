@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Mobilys — Spring Boot",
+      "request": "launch",
+      "mainClass": "br.com.mobilys.MobilysApplication",
+      "projectName": "mobilys-api",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "preLaunchTask": "Mobilys: preparar recursos"
+    }
+  ]
+}

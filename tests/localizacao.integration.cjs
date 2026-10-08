@@ -1,0 +1,37 @@
+const assert=require('node:assert/strict');
+const {fixture}=require('./operacao.fixture.cjs');
+const {sessao}=require('./http-helper.cjs');
+async function main(){
+ const f=await fixture(),{admin,motorista,outro,familia,familiaB,a,rota}=f;
+ assert.equal((await admin.request(`/rotas/${rota.id}/itinerario`,'PUT',{...f.itinerario,paradas:f.itinerario.paradas.map(p=>({...p,tipo:p.trajeto==='IDA'&&p.ordem===2?'AMBOS':p.tipo}))})).status,200);
+ await f.confirmar(familia.cliente,a.id,'IDA');
+ let v=await(await motorista.cliente.request('/operacao/viagens','POST',{rotaId:rota.id,trajeto:'IDA'})).json();const endpoint=`/operacao/viagens/${v.id}/localizacao`;
+ const posicao={latitude:-22.059,longitude:-46.975,precisao:12,capturadaEm:new Date().toISOString()};
+ assert.equal((await sessao().request(endpoint)).status,401);
+ assert.equal((await familia.cliente.request(endpoint,'PUT',posicao)).status,403);
+ assert.equal((await outro.cliente.request(endpoint,'PUT',posicao)).status,404);
+ assert.equal((await motorista.cliente.request(endpoint,'PUT',{...posicao,latitude:91})).status,400);
+ assert.equal((await motorista.cliente.request(endpoint,'PUT',{...posicao,capturadaEm:'2000-01-01T00:00:00Z'})).status,400);
+ assert.equal((await motorista.cliente.request(endpoint,'PUT',posicao)).status,204);
+ const recebido=await(await familia.cliente.request(endpoint)).json();assert.equal(recebido.latitude,posicao.latitude);assert.equal(recebido.recente,true);
+ assert.equal((await familiaB.cliente.request(endpoint)).status,404,'Família sem participante não vê GPS');
+ assert.equal((await motorista.cliente.request(endpoint,'PUT',{...posicao,latitude:1,capturadaEm:new Date(Date.now()-10000).toISOString()})).status,204);
+ assert.equal((await(await admin.request(endpoint)).json()).latitude,posicao.latitude,'Leitura fora de ordem não substitui posição nova');
+ assert.equal((await motorista.cliente.request(endpoint,'DELETE')).status,204);
+ assert.equal((await(await familia.cliente.request(endpoint)).json()).disponivel,false);
+ await motorista.cliente.request(endpoint,'PUT',{...posicao,capturadaEm:new Date(Date.now()-100000).toISOString()});
+ assert.equal((await(await familia.cliente.request(endpoint)).json()).recente,false,'Posição sem atualização deve ser identificada como antiga');
+ await motorista.cliente.request(endpoint,'PUT',posicao);
+ const acao=async(acao,extra={},expected=200)=>{const r=await motorista.cliente.request(`/operacao/viagens/${v.id}/acoes`,'POST',{versao:v.versao,acao,...extra});assert.equal(r.status,expected);if(expected===200)v=await r.json();};
+ await acao('DESEMBARCAR',{alunoId:a.id},409);await acao('CHEGAR');await acao('PRESENCA',{alunoId:a.id,status:'PRESENTE'});await acao('DESEMBARCAR',{alunoId:a.id},409);
+ await acao('AVANCAR');await acao('CHEGAR');await acao('AVANCAR',{},409);await acao('DESEMBARCAR',{alunoId:a.id});
+ assert.ok(v.alunos[0].desembarque_em);assert.equal(v.alunos[0].saida_em,null);assert.equal(v.alunos[0].desembarque_ordem,2);
+ await acao('DESEMBARCAR',{alunoId:a.id},409);await acao('AVANCAR');await acao('ENCERRAR');
+ assert.equal((await(await admin.request(endpoint)).json()).disponivel,false);assert.equal((await motorista.cliente.request(endpoint,'PUT',posicao)).status,409);
+ const senha='NovaSenhaTeste-'+Date.now(),outroLogin=sessao();await outroLogin.login(familia.email,familia.senha);
+ assert.equal((await familia.cliente.request('/auth/senha','POST',{atual:'incorreta',nova:senha})).status,400);
+ assert.equal((await familia.cliente.request('/auth/senha','POST',{atual:familia.senha,nova:senha})).status,204);
+ assert.equal((await outroLogin.request('/auth/me')).status,401);assert.equal((await sessao().login(familia.email,familia.senha)).status,401);assert.equal((await sessao().login(familia.email,senha)).status,204);
+ console.log('OK: GPS autorizado, validação, leituras fora de ordem, pausa, encerramento, desembarque individual e troca de senha com revogação.');
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});

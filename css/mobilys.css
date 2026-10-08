@@ -1,0 +1,57 @@
+/* Acabamento da aplicação: mesma identidade, hierarquia e alvos de toque maiores. */
+:root { --bs-body-bg:#f3f6f8; --sombra-suave:0 4px 24px #073e4707; }
+body { background:var(--bs-body-bg); }
+.conteudo { max-width:1560px; }
+.topo-navbar { box-shadow:0 1px 0 #ffffff18,0 6px 24px #073e4710; }
+.nav-lateral { background:#fff; border-right:1px solid #e2e9ed; padding-top:28px; }
+.nav-item-mobilys { border-radius:12px; margin:4px 8px; min-height:48px; font-weight:500; }
+.nav-item-mobilys.ativo { background:#e3f1f3; color:#073e47; box-shadow:inset 3px 0 #0e6b7a; }
+.operacao-hero { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; padding:30px; background:#073e47; color:#fff; border-radius:20px; position:relative; overflow:hidden; }
+.operacao-hero::after { content:''; position:absolute; width:260px; height:260px; border:48px solid #ffffff05; border-radius:50%; right:-100px; top:-120px; pointer-events:none; }
+.operacao-hero h1 { font-size:clamp(1.6rem,3vw,2.15rem); margin:8px 0 12px; letter-spacing:-.045em; }
+.operacao-hero p { color:#d2edf1; max-width:580px; margin:0; font-size:14px; line-height:1.7; }
+.sobretitulo { display:block; font-size:10px; letter-spacing:.14em; font-weight:700; color:#527780; }
+.operacao-hero .sobretitulo { color:#9bd1da; }
+.hero-data { display:flex; align-items:center; gap:14px; flex-shrink:0; padding:16px; border:1px solid #ffffff24; border-radius:14px; font-size:14px; }
+.hero-data i { font-size:22px; color:#9bd1da; }
+.hero-data small { display:block; color:#b0d0d5; font-size:11px; margin-top:5px; }
+.painel { border:1px solid #e1e9ed; border-radius:16px; box-shadow:var(--sombra-suave); }
+#op-filtros .form-label { font-size:12px; color:#52616b; font-weight:600; }
+#op-aviso { font-size:12px; color:#52616b; }
+.indicador { padding:22px; position:relative; min-height:155px; }
+.indicador>i { position:absolute; right:18px; top:18px; display:grid; place-items:center; width:34px; height:34px; border-radius:10px; color:#0e6b7a; background:#edf5f6; }
+.indicador>span { color:#52616b; font-size:12px; margin-right:32px; }
+.indicador>strong { font-size:34px; color:#073e47; letter-spacing:-.06em; margin:12px 0 4px; }
+.indicador>small { color:#667982; font-size:10px; }
+.etiqueta { display:inline-flex; align-items:center; gap:6px; color:#0e6b7a; background:#e3f1f3; border:1px solid #c9e5e9; padding:5px 9px; border-radius:7px; font-size:11px; font-weight:600; white-space:nowrap; }
+.etiqueta::before { content:''; width:5px; height:5px; background:currentColor; border-radius:50%; }
+.etiqueta-suave { color:#52616b; background:#f3f6f8; border-color:#e2e9ed; }
+.viagem-titulo { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.viagem-titulo h2 { margin:8px 0; }
+.viagem-detalhe { padding:24px!important; }
+.etapa-atual { display:flex; gap:16px; align-items:center; padding:20px; background:#edf5f6; border-radius:12px; margin:8px 0 20px; }
+.etapa-atual>i { font-size:26px; color:#0e6b7a; }
+.etapa-atual span,.etapa-atual small,.etapa-atual strong { display:block; }
+.etapa-atual span { font-size:11px; color:#52616b; }.etapa-atual strong{font-size:17px;margin:4px 0;}.etapa-atual small{font-size:12px;color:#52616b;}
+.passageiro { padding:18px; height:100%; border:1px solid #e2e9ed; border-radius:12px; background:#fff; }
+.passageiro-nome { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+.passageiro-nome strong { font-size:14px; flex:1; }.passageiro>p { font-size:12px; color:#52616b; line-height:1.8; }
+.avatar-aluno { display:grid; place-items:center; width:34px; height:34px; background:#e3f1f3; color:#0e6b7a; border-radius:50%; font-weight:700; }
+.percurso { padding-top:12px; border-top:1px solid #e2e9ed; }.percurso summary {font-weight:600;font-size:13px;}
+.percurso ol { list-style:none; padding:14px 0 0 12px; }.percurso li { position:relative; border-left:2px solid #e2e9ed; padding:0 12px 24px 24px; }
+.percurso li::before { content:''; position:absolute; left:-6px; top:3px; width:10px; height:10px; border-radius:50%; background:#c1cfd4; border:2px solid white; }
+.percurso li.concluida,.percurso li.atual {border-color:#0e6b7a;}.percurso li.concluida::before,.percurso li.atual::before{background:#0e6b7a;}.percurso li:last-child{padding-bottom:4px;border-color:transparent;}
+.percurso li span { font-size:11px; color:#52616b; float:right; }.percurso li strong { display:block; font-size:13px; }.percurso li small { color:#52616b; }
+.mapa-painel { padding:24px; }.mapa-cabecalho {display:flex;justify-content:space-between;align-items:center;gap:12px;}.mapa-cabecalho h3{font-size:19px;margin:8px 0 12px;}
+.mapa-viagem { height:350px; border-radius:12px; border:1px solid #e2e9ed; z-index:0; }.mapa-painel p { font-size:12px; color:#52616b; }.mapa-nota{margin:12px 0 0;}.gps-controles{margin-bottom:16px;}.gps-controles p{margin-top:10px;}
+.recuperar-senha { margin-top:24px; font-size:13px; color:#0e6b7a; }.recuperar-senha p{color:#52616b;line-height:1.7;margin-top:12px;}
+.login-lado-marca { background:radial-gradient(ellipse at top right,#1a90a455,transparent 60%),#073e47; }.login-marca-titulo{letter-spacing:-.04em;}.login-form-wrap {max-width:440px;}.login-features li{line-height:1.8;}
+.cadastro-painel,.cadastro-categoria{border-radius:14px;}.modal-header{padding:20px 24px;}.modal-body{padding:24px;}.modal-footer{padding:16px 24px;}
+.cadastro-categorias{grid-template-columns:repeat(3,minmax(0,1fr));}
+@media(max-width:575px){.cadastro-categorias{grid-template-columns:repeat(2,minmax(0,1fr));}.cadastro-categoria{padding:12px 8px;gap:8px;}.cadastro-categoria>i{width:30px;height:30px;}}
+.table tbody tr:last-child td{border-bottom:0;}.table th{white-space:nowrap;}.table td{line-height:1.5;}
+.btn { min-height:44px; }.btn-sm { padding:9px 13px; }.btn:focus-visible{outline:3px solid #80c3df;outline-offset:3px;}
+@media(max-width:991px){.operacao-hero{padding:24px;}.hero-data{display:none;}.nav-inferior{padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px #073e470b;}.nav-inferior .nav-item-mobilys{margin:4px 0;border-radius:10px;box-shadow:none;}.nav-inferior .nav-item-mobilys.ativo{box-shadow:none;}.conteudo{padding-bottom:calc(90px + env(safe-area-inset-bottom));}}
+@media(max-width:575px){.operacao-hero{border-radius:14px;padding:22px 18px;margin-bottom:20px;}.operacao-hero p{font-size:13px;}.indicador{padding:16px;min-height:146px;}.indicador>strong{font-size:30px;}.indicador>i{right:12px;top:12px;width:28px;height:28px;}.viagem-detalhe,.mapa-painel{padding:16px!important;}.viagem-titulo,.mapa-cabecalho{align-items:flex-start;flex-wrap:wrap;}.mapa-viagem{height:280px;}.gps-controles>.btn{margin-bottom:8px;}.passageiro{padding:14px;}.modal-dialog{margin:10px;}.modal-body{padding:18px;}.topo-cargo{max-width:110px;overflow:hidden;text-overflow:ellipsis;}.operacao-tabela{font-size:12px;}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important;}}
+@media print{.operacao-hero{background:white;color:#073e47;padding:0;}.operacao-hero p{color:#52616b;}.hero-data,.mapa-painel,.gps-controles{display:none!important;}.indicador{min-height:0;padding:10px;}.indicador>i{display:none;}.nav-lateral,.nav-inferior{display:none!important;}}

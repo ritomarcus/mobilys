@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="sessao-pendente">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/refinamentos.css">
+<style>.sessao-pendente #conteudo { visibility: hidden; }</style>
+<link rel="stylesheet" href="css/operacao.css">
+<link rel="stylesheet" href="css/mobilys.css">
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
 </head>
 <body class="experiencia aluno-page">
 
@@ -39,15 +43,7 @@
     <div class="row">
       <nav class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column nav-lateral" id="nav-lateral" aria-label="Navegação principal"></nav>
 
-      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1">
-        <header class="cabecalho-secao"><div><p class="sobretitulo">Área do aluno e responsável</p><h1>Uma rotina mais tranquila.</h1><p class="desc">Organize o transporte de Ana Beatriz em um só lugar.</p></div><span class="badge selo-info">Demonstração · 21 ago. 2026</span></header>
-<section class="aluno-identidade" aria-label="Aluno vinculado"><span class="avatar-perfil" aria-hidden="true">AB</span><div><strong>Ana Beatriz Souza</strong><span>Matrícula 2026001 · Manhã</span></div><span class="aluno-rota"><i class="bi bi-bus-front" aria-hidden="true"></i> Rota 10 · São João da Boa Vista</span></section>
-        <section class="faixa-viagem"><div class="d-flex justify-content-between align-items-center gap-3 flex-wrap"><div><p class="sobretitulo">Hoje</p><h2 id="ra-proxima"></h2><p class="sub mb-0" id="ra-rota"></p></div><a class="btn btn-light fw-semibold" href="responsavel-status.html">Acompanhar viagem <i class="bi bi-arrow-right"></i></a></div></section>
-        <div class="row g-4">
-          <section class="col-12 col-xl-8" aria-labelledby="titulo-agenda"><h2 class="bloco-titulo" id="titulo-agenda">Agendamentos de hoje</h2><p class="desc">Confirme a ida e a volta ou avise se não for utilizar o transporte.</p><p class="aluno-confirmacoes" id="ra-resumo" role="status"></p><div class="lista-alunos-viagem" id="lista-agendamentos"></div></section>
-          <aside class="col-12 col-xl-4"><div class="card painel mb-3"><div class="card-body p-4"><p class="sobretitulo">Seu ponto de encontro</p><h2 class="bloco-titulo" id="ra-ponto"></h2><p class="desc" id="ra-referencia"></p><p class="desc">Ponto vinculado ao aluno para demonstração.</p><details class="familia-itinerario"><summary>Consultar percurso completo</summary><label class="form-label mt-3" for="ra-trajeto">Trajeto</label><select class="form-select mb-3" id="ra-trajeto"><option value="ida">Ida à instituição</option><option value="volta">Volta para casa · fictícia</option></select><ol class="itinerario" id="ra-itinerario"></ol></details></div></div><div class="nota-viagem"><i class="bi bi-clock"></i><span>Esteja no ponto 5 minutos antes do horário previsto para o embarque.</span></div><a class="acao-rapida mt-3" href="responsavel-historico.html"><span class="icone"><i class="bi bi-clock-history"></i></span><div><div class="titulo">Histórico de viagens</div><div class="sub">Consulte os trajetos anteriores</div></div><i class="bi bi-chevron-right ms-auto"></i></a></aside>
-        </div>
-      </main>
+      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1"><p role="status">Carregando sua conta…</p></main>
     </div>
   </div>
 
@@ -65,9 +61,13 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-<script src="js/rotas.js"></script>
-<script src="js/dados.js"></script>
-<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/sistema.js"></script>
+<script src="js/conta.js"></script>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="js/operacao.js"></script>
+<script src="js/localizacao.js"></script>
 <script>iniciarPagina('resp-agendamentos');</script>
 </body>
 </html>

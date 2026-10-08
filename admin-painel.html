@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="sessao-pendente">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/refinamentos.css">
+<style>.sessao-pendente #conteudo { visibility: hidden; }</style>
+<link rel="stylesheet" href="css/operacao.css">
+<link rel="stylesheet" href="css/mobilys.css">
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
 </head>
 <body>
 
@@ -42,118 +46,7 @@
       <!-- Navegação lateral (desktop/tablet) -->
 
       <!-- Conteúdo principal -->
-      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1">
-
-        <!-- Boas-vindas -->
-        <div class="painel-boas-vindas">
-          <div>
-            <h1 id="painel-saudacao">Bom dia, Administrador</h1>
-            <p class="desc mb-0">Resumo operacional do transporte estudantil hoje</p>
-          </div>
-          <span class="data" id="painel-data">hoje</span>
-        </div>
-
-        <div class="row g-3 mb-3">
-          <div class="col-6 col-md-3">
-            <div class="card cartao-resumo h-100"><div class="card-body">
-              <div class="valor" id="d-alunos">—</div><div class="rotulo">Alunos ativos</div>
-            </div></div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="card cartao-resumo h-100"><div class="card-body">
-              <div class="valor" id="d-rotas">—</div><div class="rotulo">Rotas cadastradas</div>
-            </div></div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="card cartao-resumo h-100"><div class="card-body">
-              <div class="valor" id="d-veiculos">—</div><div class="rotulo">Veículos</div>
-            </div></div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="card cartao-resumo h-100"><div class="card-body">
-              <div class="valor" id="d-presenca">—</div><div class="rotulo">Presença hoje</div>
-            </div></div>
-          </div>
-        </div>
-
-        <!-- Ações rápidas -->
-        <div class="row g-2 mb-3">
-          <div class="col-6 col-md-3">
-            <a class="acao-rapida" href="admin-cadastros.html?perfil=admin">
-              <span class="icone"><i class="bi bi-person-plus"></i></span>
-              <div><div class="titulo">Novo aluno</div><div class="sub">Cadastrar</div></div>
-            </a>
-          </div>
-          <div class="col-6 col-md-3">
-            <a class="acao-rapida" href="admin-presencas.html?perfil=admin">
-              <span class="icone"><i class="bi bi-check2-circle"></i></span>
-              <div><div class="titulo">Presenças</div><div class="sub">Ver histórico</div></div>
-            </a>
-          </div>
-          <div class="col-6 col-md-3">
-            <a class="acao-rapida" href="admin-relatorios.html?perfil=admin">
-              <span class="icone"><i class="bi bi-bar-chart-line"></i></span>
-              <div><div class="titulo">Relatório</div><div class="sub">Gerar agora</div></div>
-            </a>
-          </div>
-          <div class="col-6 col-md-3">
-            <a class="acao-rapida" href="admin-cadastros.html?perfil=admin">
-              <span class="icone"><i class="bi bi-signpost-split"></i></span>
-              <div><div class="titulo">Rotas</div><div class="sub">Gerenciar</div></div>
-            </a>
-          </div>
-        </div>
-
-        <!-- Gráficos -->
-        <p class="desc"><i class="bi bi-info-circle me-1"></i>Registros de presença salvos neste navegador</p>
-        <div class="row g-3 mb-3">
-          <div class="col-12 col-lg-7">
-            <div class="card painel h-100">
-              <div class="card-header painel-cabecalho">
-                <h2 class="m-0">Presença por data</h2>
-              </div>
-              <div class="card-body">
-                <div class="grafico-caixa"><canvas id="grafico-presenca-semana" role="img" aria-label="Presença por data. Consulte os valores abaixo."></canvas></div>
-                <details class="grafico-dados"><summary>Consultar valores do gráfico</summary><p class="mt-2 mb-0" id="dados-presenca-periodo"></p></details>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-lg-5">
-            <div class="card painel h-100">
-              <div class="card-header painel-cabecalho">
-                <h2 class="m-0">Alunos por rota</h2>
-              </div>
-              <div class="card-body">
-                <div class="grafico-caixa pequena"><canvas id="grafico-alunos-rota" role="img" aria-label="Alunos por rota. Consulte os valores na legenda abaixo."></canvas></div>
-                <div class="d-flex flex-column gap-2 mt-2" id="legenda-alunos-rota"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card painel mb-3">
-          <div class="card-header painel-cabecalho"><h2 class="m-0">Presenças por rota</h2></div>
-          <div class="card-body">
-            <p class="desc">Comparação dos registros salvos nesta demonstração.</p>
-            <div class="grafico-caixa"><canvas id="grafico-presencas-rota" role="img" aria-label="Presenças e ausências por rota. Valores disponíveis abaixo."></canvas></div>
-            <details class="grafico-dados"><summary>Consultar valores do gráfico</summary><div id="dados-presencas-rota" class="mt-2"></div></details>
-          </div>
-        </div>
-
-        <div class="card painel">
-          <div class="card-header painel-cabecalho d-flex align-items-center justify-content-between">
-            <h2 class="m-0">Viagens de hoje</h2>
-            <span class="badge selo-info">Dados simulados</span>
-          </div>
-          <div class="card-body p-0 tabela-scroll">
-            <table class="table table-hover align-middle mb-0">
-              <thead><tr><th>Rota</th><th>Motorista</th><th>Trajeto</th><th>Status</th><th>Confirmados</th></tr></thead>
-              <tbody id="tabela-viagens-hoje"></tbody>
-            </table>
-          </div>
-        </div>
-
-      </main>
+      <main class="col-12 col-lg-9 col-xl-10 conteudo" id="conteudo" tabindex="-1"><p role="status">Carregando sua conta…</p></main>
     </div>
   </div>
 
@@ -174,9 +67,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="js/rotas.js"></script>
-<script src="js/dados.js"></script>
-<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/sistema.js"></script>
+<script src="js/conta.js"></script>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="js/operacao.js"></script>
+<script src="js/localizacao.js"></script>
 <script>iniciarPagina('admin-dashboard');</script>
 </body>
 </html>

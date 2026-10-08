@@ -1,6 +1,6 @@
 /* ==========================================================================
    MOBILYS — app.js
-   Protótipo funcional com armazenamento local (sem backend) cobrindo os casos de uso
+   Cadastros de alunos e rotas via API; demais fluxos em demonstração local.
    do diagrama: Administrador, Motorista e Aluno/Responsável.
    Usa componentes do Bootstrap 5 (Modal, Toast, Dropdown) via bootstrap.bundle.js.
    ========================================================================== */
@@ -270,7 +270,7 @@ function iniciarPagina(viewAtual){
   });
   const aviso = document.createElement('div');
   aviso.className = 'demo-controles';
-  aviso.innerHTML = `<span>${dadosMobilys.data} · Dados salvos neste navegador</span><button type="button" class="btn btn-sm btn-outline-primary" id="demo-reiniciar">Reiniciar demonstração</button>`;
+  aviso.innerHTML = `<span>${dadosMobilys.data} · ${viewAtual === 'admin-cadastros' ? 'Alunos e rotas salvos no servidor. Demais categorias em demonstração local.' : 'Demonstração local · Esta tela ainda não usa os cadastros do servidor.'}</span><button type="button" class="btn btn-sm btn-outline-primary" id="demo-reiniciar">Reiniciar demonstração local</button>`;
   document.getElementById('conteudo').prepend(aviso);
   document.getElementById('demo-reiniciar').addEventListener('click', async () => {
     if (!window.confirm('Apagar as alterações locais e restaurar os dados iniciais da demonstração?')) return;
@@ -280,7 +280,7 @@ function iniciarPagina(viewAtual){
   if (dadosMobilys.erro) mostrarToast(dadosMobilys.erro, false);
 
   if (viewAtual === 'admin-dashboard') atualizarDashboard();
-  if (viewAtual === 'admin-cadastros') montarAbasCadastro();
+  if (viewAtual === 'admin-cadastros') { montarAbasCadastro(); carregarCadastrosApi(); }
   if (viewAtual === 'admin-presencas') renderHistoricoPresencas();
   if (viewAtual === 'admin-relatorios') iniciarRelatorios();
   if (viewAtual === 'motorista-viagem') renderViagem();
@@ -446,13 +446,11 @@ const ENTIDADES = {
       { rotulo: 'Rota', campo: 'rota' },
     ],
     campos: [
-      { chave: 'nome', rotulo: 'Nome completo', tipo: 'text', obrigatorio: true },
-      { chave: 'matricula', rotulo: 'Matrícula', tipo: 'text', obrigatorio: true },
-      { chave: 'turma', rotulo: 'Turma', tipo: 'text', obrigatorio: true },
-      { chave: 'responsavel', rotulo: 'Responsável', tipo: 'text', obrigatorio: false },
-      { chave: 'rota', rotulo: 'Rota associada', tipo: 'select', origem: 'rotas', campoOrigem: 'nome', legenda: 'Associar aluno à rota' },
-      { chave: 'pontoIndice', rotulo: 'Ponto de embarque da ida', tipo: 'select', opcoes: [] },
-      { chave: 'instituicao', rotulo: 'Instituição de embarque da volta', tipo: 'select', opcoes: [] },
+      { chave: 'nome', rotulo: 'Nome completo', tipo: 'text', obrigatorio: true, max: 150 },
+      { chave: 'matricula', rotulo: 'Matrícula', tipo: 'text', obrigatorio: true, max: 40 },
+      { chave: 'turma', rotulo: 'Turma', tipo: 'text', obrigatorio: true, max: 60 },
+      { chave: 'responsavel', rotulo: 'Responsável', tipo: 'text', obrigatorio: true, max: 150 },
+      { chave: 'rotaId', rotulo: 'Rota associada', tipo: 'select', origem: 'rotas', campoOrigem: 'nome', valorOrigem: 'id', obrigatorio: true },
     ],
   },
   rotas: {
@@ -460,15 +458,15 @@ const ENTIDADES = {
     colunas: [
       { rotulo: 'Nome', campo: 'nome' },
       { rotulo: 'Turno', campo: 'turno' },
-      { rotulo: 'Veículo', campo: 'veiculo' },
+      { rotulo: 'Origem', campo: 'origem' },
+      { rotulo: 'Destino', campo: 'destino' },
       { rotulo: 'Alunos', campo: 'alunos' },
     ],
     campos: [
-      { chave: 'nome', rotulo: 'Nome da rota', tipo: 'text', obrigatorio: true },
-      { chave: 'origem', rotulo: 'Cidade de origem', tipo: 'text', obrigatorio: true },
-      { chave: 'destino', rotulo: 'Cidade de destino', tipo: 'text', obrigatorio: true },
-      { chave: 'turno', rotulo: 'Turno', tipo: 'select', opcoes: ['Manhã', 'Tarde', 'Noite'], obrigatorio: true },
-      { chave: 'veiculo', rotulo: 'Veículo', tipo: 'select', origem: 'veiculos', campoOrigem: 'placa', legenda: 'Associar veículo à rota' },
+      { chave: 'nome', rotulo: 'Nome da rota', tipo: 'text', obrigatorio: true, max: 150 },
+      { chave: 'origem', rotulo: 'Cidade de origem', tipo: 'text', obrigatorio: true, max: 150 },
+      { chave: 'destino', rotulo: 'Cidade de destino', tipo: 'text', obrigatorio: true, max: 150 },
+      { chave: 'turno', rotulo: 'Turno', tipo: 'text', obrigatorio: true, max: 30 },
     ],
   },
   motoristas: {
@@ -515,10 +513,10 @@ const ENTIDADES = {
   },
 };
 
-/* Apresentação e filtros de cada categoria. Os dados continuam no DB de demonstração. */
+/* Apresentação e filtros de cada categoria. Alunos e rotas vêm da API; demais categorias usam a demonstração local. */
 const CADASTRO_UI = {
-  alunos: { plural: 'Alunos', novo: 'Novo aluno', icone: 'bi-mortarboard', descricao: 'Dados escolares, responsáveis e vínculos com as rotas.', filtro: 'rota', filtroNome: 'Rota', busca: 'Nome, matrícula ou responsável', ajuda: 'Associe cada aluno à sua rota no formulário de cadastro.', grupos: ['Dados do aluno', 'Transporte escolar'] },
-  rotas: { plural: 'Rotas', novo: 'Nova rota', icone: 'bi-signpost-split', descricao: 'Organize os trajetos, turnos e veículos do transporte.', filtro: 'turno', filtroNome: 'Turno', busca: 'Nome da rota ou placa do veículo', ajuda: 'O número de alunos é calculado a partir dos alunos associados a cada rota.', grupos: ['Identificação da rota', 'Veículo do trajeto'] },
+  alunos: { plural: 'Alunos', novo: 'Novo aluno', icone: 'bi-mortarboard', descricao: 'Dados escolares, responsáveis e vínculos com as rotas.', filtro: 'rota', filtroNome: 'Rota', busca: 'Nome, matrícula ou responsável', ajuda: 'Cadastre uma rota antes de adicionar alunos. Selecione a rota no formulário.', grupos: ['Dados do aluno', 'Transporte escolar'] },
+  rotas: { plural: 'Rotas', novo: 'Nova rota', icone: 'bi-signpost-split', descricao: 'Organize os trajetos, origens, destinos e turnos do transporte.', filtro: 'turno', filtroNome: 'Turno', busca: 'Nome da rota, origem ou destino', ajuda: 'O número de alunos é calculado a partir dos alunos associados a cada rota.', grupos: ['Identificação da rota', 'Veículo do trajeto'] },
   motoristas: { plural: 'Motoristas', novo: 'Novo motorista', icone: 'bi-person-vcard', descricao: 'Consulte os condutores, seus contatos e veículos.', filtro: 'veiculo', filtroNome: 'Veículo', busca: 'Nome, CNH, telefone ou veículo', ajuda: 'Para associar um motorista a um veículo, abra a categoria Veículos e edite o veículo desejado.', grupos: ['Dados do motorista'] },
   veiculos: { plural: 'Veículos', novo: 'Novo veículo', icone: 'bi-bus-front', descricao: 'Mantenha a frota e os motoristas associados organizados.', filtro: 'motorista', filtroNome: 'Motorista', busca: 'Placa, modelo ou motorista', ajuda: 'Associe o motorista aqui e vincule o veículo ao trajeto na categoria Rotas.', grupos: ['Dados do veículo', 'Motorista responsável'] },
   usuarios: { plural: 'Usuários', novo: 'Novo usuário', icone: 'bi-person-gear', descricao: 'Organize as pessoas e seus perfis de acesso ao sistema.', filtro: 'perfil', filtroNome: 'Perfil', busca: 'Nome, e-mail ou perfil de acesso', ajuda: 'Os perfis representam as áreas de Administrador, Motorista e Aluno/Responsável.', grupos: ['Dados do usuário', 'Perfil de acesso'] },
@@ -550,12 +548,67 @@ function renderRotaAluno(){
 document.getElementById('ra-trajeto')?.addEventListener('change', renderRotaAluno);
 let entidadeAtual = 'alunos';
 let cadastroRetornoFoco = null;
+const apiCadastros = typeof criarApiMobilys === 'function' ? criarApiMobilys(window.MOBILYS_API_URL) : null;
+let cadastroApiEstado = 'carregando';
+let cadastroApiErro = '';
+let cadastroCarregando = false;
+let cadastroSalvando = false;
+const cadastroRemoto = chave => ['alunos', 'rotas'].includes(chave);
+function tabelaCadastro(chave) { return cadastroRemoto(chave) ? apiCadastros.db[chave] : DB[chave]; }
+
+async function carregarCadastrosApi() {
+  if (cadastroCarregando || cadastroSalvando) return;
+  cadastroCarregando = true;
+  cadastroApiEstado = 'carregando';
+  montarAbasCadastro();
+  try {
+    await apiCadastros.atualizar();
+    cadastroApiEstado = 'pronto';
+  } catch (erro) {
+    cadastroApiEstado = 'erro';
+    cadastroApiErro = erro.message;
+  } finally {
+    cadastroCarregando = false;
+    montarAbasCadastro();
+  }
+}
+document.getElementById('cadastro-atualizar')?.addEventListener('click', carregarCadastrosApi);
+elModal?.addEventListener('hide.bs.modal', evento => { if (cadastroSalvando) evento.preventDefault(); });
+
+async function salvarCadastro(entidade, id, dados, mensagem) {
+  if (!cadastroRemoto(entidade)) {
+    const ok = await executarAlteracao(() => dadosMobilys.cadastro(entidade, id, dados), mensagem);
+    if (ok) modalCadastro.hide();
+    return;
+  }
+  if (cadastroSalvando || cadastroApiEstado !== 'pronto') return;
+  cadastroSalvando = true;
+  const botao = document.getElementById('modal-salvar');
+  const texto = botao.textContent;
+  botao.disabled = true;
+  botao.textContent = 'Aguarde…';
+  let sucesso = false;
+  try {
+    await apiCadastros.cadastro(entidade, id, dados);
+    sucesso = true;
+    mostrarToast(mensagem);
+  } catch (erro) {
+    document.getElementById('modal-descricao').textContent = erro.message;
+    mostrarToast(escaparHTML(erro.message), false);
+  } finally {
+    cadastroSalvando = false;
+    botao.disabled = false;
+    botao.textContent = texto;
+    montarAbasCadastro();
+  }
+  if (sucesso) modalCadastro.hide();
+}
 
 function montarAbasCadastro(){
   const abas = document.getElementById('abas-cadastro');
   abas.innerHTML = Object.keys(ENTIDADES).map(chave => `
     <button type="button" class="cadastro-categoria ${chave === entidadeAtual ? 'ativo' : ''}" id="aba-${chave}" role="tab" aria-selected="${chave === entidadeAtual}" aria-controls="painel-cadastro" tabindex="${chave === entidadeAtual ? 0 : -1}" data-entidade="${chave}">
-      <i class="bi ${CADASTRO_UI[chave].icone}" aria-hidden="true"></i><span>${CADASTRO_UI[chave].plural}<small>${DB[chave].length} registros</small></span>
+      <i class="bi ${CADASTRO_UI[chave].icone}" aria-hidden="true"></i><span>${CADASTRO_UI[chave].plural}<small>${cadastroRemoto(chave) && cadastroApiEstado !== 'pronto' ? '—' : tabelaCadastro(chave).length} registros · ${cadastroRemoto(chave) ? 'Servidor' : 'Demo'}</small></span>
     </button>`).join('');
   abas.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => selecionarCategoria(b.dataset.entidade));
@@ -571,6 +624,10 @@ function montarAbasCadastro(){
     });
   });
   const ui = CADASTRO_UI[entidadeAtual];
+  document.getElementById('cadastro-origem').textContent = cadastroRemoto(entidadeAtual) ? 'Dados do servidor' : 'Demonstração local';
+  document.getElementById('cadastro-api-status').textContent = cadastroApiEstado === 'carregando' ? 'Carregando alunos e rotas…' : cadastroApiEstado === 'erro' ? cadastroApiErro : 'Alunos e rotas carregados do servidor.';
+  document.getElementById('cadastro-atualizar').disabled = cadastroCarregando || cadastroSalvando;
+  document.getElementById('btn-novo-cadastro').disabled = cadastroRemoto(entidadeAtual) && (cadastroApiEstado !== 'pronto' || (entidadeAtual === 'alunos' && !apiCadastros.db.rotas.length));
   document.getElementById('painel-cadastro').setAttribute('aria-labelledby', `aba-${entidadeAtual}`);
   document.getElementById('cadastro-titulo').textContent = ui.plural;
   document.getElementById('cadastro-caption').textContent = `Lista de ${ui.plural.toLowerCase()}`;
@@ -581,7 +638,7 @@ function montarAbasCadastro(){
   document.getElementById('filtro-cadastro-label').textContent = ui.filtroNome;
   const select = document.getElementById('filtro-cadastro');
   const anterior = select.value;
-  const opcoes = [...new Set(DB[entidadeAtual].map(r => r[ui.filtro] || 'Não associado'))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  const opcoes = [...new Set(tabelaCadastro(entidadeAtual).map(r => r[ui.filtro] || 'Não associado'))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
   select.innerHTML = '<option value="">Todos</option>' + opcoes.map(o => `<option value="${escaparHTML(o)}">${escaparHTML(o)}</option>`).join('');
   if (opcoes.includes(anterior)) select.value = anterior;
   const ordem = document.getElementById('ordem-cadastro');
@@ -605,29 +662,35 @@ function detalhesRotaHTML(r){
 
 function renderTabelaCadastro(){
   const def = ENTIDADES[entidadeAtual], ui = CADASTRO_UI[entidadeAtual];
+  if (cadastroRemoto(entidadeAtual) && cadastroApiEstado !== 'pronto') {
+    document.getElementById('cabecalho-tabela-cadastro').innerHTML = '';
+    document.getElementById('corpo-tabela-cadastro').innerHTML = `<tr><td><div class="vazio">${cadastroApiEstado === 'carregando' ? 'Carregando registros…' : 'Lista indisponível. Use Atualizar do servidor para tentar novamente.'}</div></td></tr>`;
+    document.getElementById('cadastro-contagem').textContent = '—';
+    return;
+  }
   const filtro = normalizarBusca(document.getElementById('busca-cadastro').value.trim());
   const categoria = document.getElementById('filtro-cadastro').value;
   const ordem = document.getElementById('ordem-cadastro').value;
-  const dados = DB[def.chave].filter(item => (!filtro || Object.values(item).some(v => normalizarBusca(v).includes(filtro))) && (!categoria || (item[ui.filtro] || 'Não associado') === categoria));
+  const dados = tabelaCadastro(def.chave).filter(item => (!filtro || Object.values(item).some(v => normalizarBusca(v).includes(filtro))) && (!categoria || (item[ui.filtro] || 'Não associado') === categoria));
   dados.sort((a,b) => ordem === 'recentes' ? b.id-a.id : (ordem === 'za' ? -1 : 1) * String(a.nome || a.placa).localeCompare(String(b.nome || b.placa), 'pt-BR'));
-  document.getElementById('cadastro-contagem').textContent = `${dados.length} de ${DB[def.chave].length} registros`;
+  document.getElementById('cadastro-contagem').textContent = `${dados.length} de ${tabelaCadastro(def.chave).length} registros`;
   document.getElementById('cabecalho-tabela-cadastro').innerHTML = `<tr>${def.colunas.map(c => `<th scope="col">${c.rotulo}</th>`).join('')}<th scope="col" class="text-end">Ações</th></tr>`;
   const corpo = document.getElementById('corpo-tabela-cadastro');
   if (!dados.length){
     corpo.innerHTML = `<tr class="cadastro-vazio"><td colspan="${def.colunas.length + 1}"><div class="vazio"><i class="bi ${filtro || categoria ? 'bi-search' : ui.icone}"></i><strong>${filtro || categoria ? 'Nenhum resultado para estes filtros' : 'Esta lista ainda está vazia'}</strong>${filtro || categoria ? 'Altere a busca ou limpe os filtros para ver outros registros.' : `Use “${ui.novo}” para adicionar o primeiro registro.`}</div></td></tr>`;
     return;
   }
-  corpo.innerHTML = dados.map(item => `<tr ${entidadeAtual === 'rotas' ? 'class="rota-resumo"' : ''}>
+  corpo.innerHTML = dados.map(item => `<tr ${entidadeAtual === 'rotas' && item.paradas ? 'class="rota-resumo"' : ''}>
     ${def.colunas.map((c, i) => {
-      const valor = c.campo === 'alunos' ? DB.alunos.filter(a => a.rota === item.nome).length : item[c.campo] ?? 'Não associado';
+      const valor = c.campo === 'alunos' ? tabelaCadastro('alunos').filter(a => a.rotaId === item.id).length : item[c.campo] ?? 'Não associado';
       let html = escaparHTML(valor);
       if (i === 0) html = `<div class="cadastro-identidade"><span class="cadastro-avatar"><i class="bi ${ui.icone}" aria-hidden="true"></i></span><span><strong>${html}</strong><small>${escaparHTML(entidadeAtual === 'alunos' ? (item.responsavel ? `Responsável: ${item.responsavel}` : 'Sem responsável vinculado') : entidadeAtual === 'veiculos' ? item.modelo : `Registro #${String(item.id).padStart(3, '0')}`)}</small></span></div>`;
       else if (['rota','turno','perfil','motorista','veiculo'].includes(c.campo)) html = `<span class="cadastro-vinculo ${valor === 'Não associado' || !valor ? 'sem-vinculo' : ''}">${html || 'Não associado'}</span>`;
-      if (entidadeAtual === 'rotas' && i === 0) html = `<button type="button" class="rota-expandir" id="rota-botao-${item.id}" aria-expanded="false" aria-controls="rota-detalhes-${item.id}">${html}<span class="rota-expandir-indicador"><span class="rota-expandir-texto">Ver itinerário</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></button>`;
+      if (entidadeAtual === 'rotas' && item.paradas && i === 0) html = `<button type="button" class="rota-expandir" id="rota-botao-${item.id}" aria-expanded="false" aria-controls="rota-detalhes-${item.id}">${html}<span class="rota-expandir-indicador"><span class="rota-expandir-texto">Ver itinerário</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></button>`;
       return `<td data-label="${c.rotulo}">${html}</td>`;
     }).join('')}
     <td data-label="Ações"><div class="cadastro-acoes"><button class="btn btn-sm btn-outline-primary" data-acao="editar" data-id="${item.id}" aria-label="Editar ${escaparHTML(item.nome || item.placa)}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</button><button class="icone-btn" data-acao="excluir" data-id="${item.id}" aria-label="Excluir ${escaparHTML(item.nome || item.placa)}" title="Excluir registro"><i class="bi bi-trash3" aria-hidden="true"></i></button></div></td>
-  </tr>${entidadeAtual === 'rotas' ? `<tr class="rota-expansao" id="rota-detalhes-${item.id}" hidden><td colspan="${def.colunas.length + 1}"><div role="region" aria-labelledby="rota-botao-${item.id}">${detalhesRotaHTML(item)}</div></td></tr>` : ''}`).join('');
+  </tr>${entidadeAtual === 'rotas' && item.paradas ? `<tr class="rota-expansao" id="rota-detalhes-${item.id}" hidden><td colspan="${def.colunas.length + 1}"><div role="region" aria-labelledby="rota-botao-${item.id}">${detalhesRotaHTML(item)}</div></td></tr>` : ''}`).join('');
   corpo.querySelectorAll('.rota-expandir').forEach(botao => botao.addEventListener('click', () => {
     const abrir = botao.getAttribute('aria-expanded') !== 'true';
     corpo.querySelectorAll('.rota-expandir').forEach(outro => {
@@ -665,55 +728,39 @@ elModal?.addEventListener('hidden.bs.modal', () => {
 
 function excluirRegistro(id){
   const def = ENTIDADES[entidadeAtual];
-  const registro = DB[def.chave].find(i => i.id === id);
+  const registro = tabelaCadastro(def.chave).find(i => i.id === id);
   document.getElementById('modal-titulo').textContent = `Excluir ${def.titulo.toLowerCase()}`;
   document.getElementById('modal-descricao').textContent = 'Confira o registro antes de confirmar a exclusão.';
   document.getElementById('modal-salvar').textContent = 'Excluir registro';
   const form = document.getElementById('modal-form');
-  form.innerHTML = `<div class="cadastro-exclusao"><i class="bi bi-trash3"></i><strong>${escaparHTML(registro.nome || registro.placa)}</strong><p class="desc mb-0">O registro será removido desta lista de demonstração.</p></div>`;
+  form.innerHTML = `<div class="cadastro-exclusao"><i class="bi bi-trash3"></i><strong>${escaparHTML(registro.nome || registro.placa)}</strong><p class="desc mb-0">O registro será removido ${cadastroRemoto(def.chave) ? 'do servidor' : 'da demonstração local'}.</p></div>`;
   form.onsubmit = e => {
     e.preventDefault();
-    executarAlteracao(() => dadosMobilys.cadastro(def.chave, id, null), 'Registro excluído com sucesso.').then(ok => { if (ok) modalCadastro.hide(); });
+    salvarCadastro(def.chave, id, null, 'Registro excluído com sucesso.');
   };
   modalCadastro.show();
 }
 
 function abrirModalCadastro(id){
   const def = ENTIDADES[entidadeAtual], ui = CADASTRO_UI[entidadeAtual];
-  const registro = id ? DB[def.chave].find(i => i.id === id) : {};
+  const registro = id ? tabelaCadastro(def.chave).find(i => i.id === id) : {};
   document.getElementById('modal-titulo').textContent = id ? `Editar ${def.titulo.toLowerCase()}` : ui.novo;
   document.getElementById('modal-descricao').textContent = 'Preencha os dados abaixo. Os campos com * são obrigatórios.';
   document.getElementById('modal-salvar').textContent = id ? 'Salvar alterações' : 'Salvar cadastro';
   const form = document.getElementById('modal-form');
   const grupos = [def.campos.filter(c => c.tipo !== 'select'), def.campos.filter(c => c.tipo === 'select')].filter(g => g.length);
   form.innerHTML = grupos.map((campos, index) => `<fieldset class="cadastro-fieldset"><legend><span>${index + 1}</span>${ui.grupos[index]}</legend><div class="row g-3">${campos.map(c => {
-    const attrs = `id="campo-${c.chave}" name="${c.chave}" ${c.obrigatorio ? 'required' : ''}`;
+    const attrs = `id="campo-${c.chave}" name="${c.chave}" ${c.obrigatorio ? 'required' : ''} ${c.max ? `maxlength="${c.max}"` : ''}`;
     let controle;
     if (c.tipo === 'select'){
-      const opcoes = c.origem ? DB[c.origem].map(o => o[c.campoOrigem]) : c.opcoes;
-      controle = `<select class="form-select" ${attrs}><option value="">${c.obrigatorio ? 'Selecione uma opção' : 'Sem associação'}</option>${opcoes.map(o => `<option value="${escaparHTML(o)}" ${registro[c.chave] === o ? 'selected' : ''}>${escaparHTML(o)}</option>`).join('')}</select>`;
+      const opcoes = c.origem ? tabelaCadastro(c.origem).map(o => ({ valor: o[c.valorOrigem || c.campoOrigem], texto: o[c.campoOrigem] })) : c.opcoes.map(o => ({ valor: o, texto: o }));
+      controle = `<select class="form-select" ${attrs}><option value="">${c.obrigatorio ? 'Selecione uma opção' : 'Sem associação'}</option>${opcoes.map(o => `<option value="${escaparHTML(o.valor)}" ${String(registro[c.chave]) === String(o.valor) ? 'selected' : ''}>${escaparHTML(o.texto)}</option>`).join('')}</select>`;
     } else {
       const dicas = { nome: 'Digite o nome completo', matricula: 'Ex.: 2026006', turma: 'Ex.: Manhã ou Noite', responsavel: 'Nome do responsável', cnh: 'Número da CNH', telefone: 'Ex.: (19) 99123-4567', placa: 'Ex.: ABC-1D23', modelo: 'Ex.: Volksbus 15.190', capacidade: 'Ex.: 32', email: 'nome@exemplo.com.br' };
       controle = `<input type="${c.chave === 'telefone' ? 'tel' : c.tipo}" class="form-control" ${attrs} value="${escaparHTML(registro[c.chave] ?? '')}" placeholder="${entidadeAtual === 'rotas' && c.chave === 'nome' ? 'Ex.: Rota 10 — São João da Boa Vista' : dicas[c.chave] || ''}" ${c.tipo === 'number' ? 'min="1" step="1"' : ''}>`;
     }
-    if (c.chave === 'responsavel') {
-      controle = controle.replace('<input ', '<input aria-describedby="ajuda-responsavel" ') + '<div class="form-text" id="ajuda-responsavel">Para alunos maiores de idade que não possuem responsável vinculado, deixe este campo em branco.</div>';
-    }
     return `<div class="${['nome','responsavel','email'].includes(c.chave) || c.tipo === 'select' ? 'col-12' : 'col-md-6'}"><label class="form-label" for="campo-${c.chave}">${c.rotulo}${c.obrigatorio ? ' <span aria-hidden="true">*</span>' : ' <small class="text-body-secondary">(opcional)</small>'}</label>${controle}</div>`;
   }).join('')}</div></fieldset>`).join('') + `<p class="cadastro-form-ajuda"><i class="bi bi-info-circle me-1"></i>${ui.ajuda}</p>`;
-  if (entidadeAtual === 'alunos') {
-    const preencherPontos = (manter = false) => {
-      const rota = DB.rotas.find(r => r.nome === form.elements.rota.value);
-      const ponto = form.elements.pontoIndice;
-      const instituicao = form.elements.instituicao;
-      ponto.innerHTML = '<option value="">Selecione o ponto</option>' + (rota?.paradas || []).map((p, i) => `<option value="${i}">${escaparHTML(p.horario + ' · ' + p.local)}</option>`).join('');
-      instituicao.innerHTML = '<option value="">Selecione a instituição</option>' + (rota?.instituicoes || []).map(i => `<option>${escaparHTML(i)}</option>`).join('');
-      ponto.required = instituicao.required = !!rota;
-      if (manter) { ponto.value = registro.pontoIndice ?? ''; instituicao.value = registro.instituicao || ''; }
-    };
-    preencherPontos(true);
-    form.elements.rota.addEventListener('change', () => preencherPontos());
-  }
   form.onsubmit = e => {
     e.preventDefault();
     if (!form.reportValidity()) return;
@@ -721,7 +768,7 @@ function abrirModalCadastro(id){
     const vazio = def.campos.find(c => c.obrigatorio && !dados[c.chave]);
     if (vazio){ form.elements[vazio.chave].value = ''; form.reportValidity(); return; }
     def.campos.filter(c => c.tipo === 'number').forEach(c => dados[c.chave] = Number(dados[c.chave]));
-    executarAlteracao(() => dadosMobilys.cadastro(def.chave, id, dados), id ? 'Alterações salvas com sucesso.' : 'Cadastro realizado com sucesso.').then(ok => { if (ok) modalCadastro.hide(); });
+    salvarCadastro(def.chave, id, dados, id ? 'Alterações salvas com sucesso.' : 'Cadastro realizado com sucesso.');
   };
   modalCadastro.show();
 }
@@ -737,6 +784,17 @@ function preencherFiltroRotas(){
     sel.innerHTML = '<option value="">Todas as rotas</option>' + nomes.map(nome => `<option value="${escaparHTML(nome)}">${escaparHTML(nome)}</option>`).join('');
     sel.value = nomes.includes(anterior) ? anterior : '';
   });
+}
+
+function horarioPresenca(registro, campo){
+  if (registro.status !== 'presente') return 'Não se aplica';
+  const valor = campo === 'entradaEm' ? registro.entradaEm || registro.registradoEm : registro.saidaEm;
+  if (!valor) return 'Não registrado';
+  const instante = new Date(valor);
+  if (Number.isNaN(instante.getTime())) return 'Não registrado';
+  const data = instante.toLocaleDateString('pt-BR');
+  const hora = instante.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  return data === registro.data ? hora : `${data} ${hora}`;
 }
 
 function renderHistoricoPresencas(){
@@ -771,10 +829,12 @@ function renderHistoricoPresencas(){
     <tr>
       <td data-label="Aluno"><div class="cadastro-identidade"><span class="cadastro-avatar" aria-hidden="true">${escaparHTML(p.aluno.split(' ').slice(0,2).map(n => n[0]).join(''))}</span><strong>${escaparHTML(p.aluno)}</strong></div></td>
       <td data-label="Data"><time datetime="${dataISO(p.data)}">${escaparHTML(p.data)}</time></td>
+    <td data-label="Entrada">${escaparHTML(horarioPresenca(p, 'entradaEm'))}</td>
+    <td data-label="Saída">${escaparHTML(horarioPresenca(p, 'saidaEm'))}</td>
       <td data-label="Rota"><span class="cadastro-vinculo">${escaparHTML(p.rota)}</span></td>
       <td data-label="Trajeto"><span class="presenca-trajeto"><i class="bi ${p.turno === 'Ida' ? 'bi-arrow-up-right' : 'bi-arrow-down-left'}" aria-hidden="true"></i>${escaparHTML(p.turno)}</span></td>
       <td data-label="Situação"><span class="badge ${p.status === 'presente' ? 'selo-presente' : 'selo-ausente'}"><i class="bi ${p.status === 'presente' ? 'bi-check-circle' : 'bi-dash-circle'} me-1" aria-hidden="true"></i>${p.status === 'presente' ? 'Presente' : 'Ausente'}</span></td>
-    </tr>`).join('') || '<tr><td colspan="5"><div class="vazio"><i class="bi bi-search" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong>Altere a busca ou use “Limpar filtros” para consultar outras presenças.</div></td></tr>';
+    </tr>`).join('') || '<tr><td colspan="7"><div class="vazio"><i class="bi bi-search" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong>Altere a busca ou use “Limpar filtros” para consultar outras presenças.</div></td></tr>';
 }
 
 ['f-presenca-busca', 'f-presenca-rota', 'f-presenca-turno', 'f-presenca-data', 'f-presenca-status', 'f-presenca-ordem'].forEach(id => {
@@ -852,10 +912,12 @@ function gerarRelatorio(){
   document.getElementById('rel-registros').innerHTML = registros.map(p => `<tr>
     <td data-label="Aluno"><div class="cadastro-identidade"><span class="cadastro-avatar" aria-hidden="true"><i class="bi bi-person"></i></span><strong>${escaparHTML(p.aluno)}</strong></div></td>
     <td data-label="Data"><time datetime="${dataRelatorioISO(p.data)}">${escaparHTML(p.data)}</time></td>
+    <td data-label="Entrada">${escaparHTML(horarioPresenca(p, 'entradaEm'))}</td>
+    <td data-label="Saída">${escaparHTML(horarioPresenca(p, 'saidaEm'))}</td>
     <td data-label="Rota"><span class="cadastro-vinculo">${escaparHTML(p.rota)}</span></td>
     <td data-label="Trajeto">${escaparHTML(p.turno)}</td>
     <td data-label="Situação"><span class="badge ${p.status === 'presente' ? 'selo-presente' : 'selo-ausente'}">${p.status === 'presente' ? 'Presente' : 'Ausente'}</span></td>
-  </tr>`).join('') || '<tr><td colspan="5"><div class="vazio"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong>Selecione outro período ou outra rota e gere o relatório novamente.</div></td></tr>';
+  </tr>`).join('') || '<tr><td colspan="7"><div class="vazio"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong>Selecione outro período ou outra rota e gere o relatório novamente.</div></td></tr>';
   atualizarEstadoRelatorio();
 }
 
@@ -873,7 +935,7 @@ function csvRelatorio(registros){
     if (/^\s*[=+\-@]/.test(texto) || /^[\t\r\n]/.test(texto)) texto = "'" + texto;
     return `"${texto.replace(/"/g, '""')}"`;
   };
-  const linhas = [['Aluno', 'Data', 'Rota', 'Trajeto', 'Situação'], ...registros.map(p => [p.aluno, p.data, p.rota, p.turno, p.status === 'presente' ? 'Presente' : 'Ausente'])];
+  const linhas = [['Aluno', 'Data', 'Entrada', 'Saída', 'Rota', 'Trajeto', 'Situação'], ...registros.map(p => [p.aluno, p.data, horarioPresenca(p, 'entradaEm'), horarioPresenca(p, 'saidaEm'), p.rota, p.turno, p.status === 'presente' ? 'Presente' : 'Ausente'])];
   return '\uFEFF' + linhas.map(linha => linha.map(celula).join(';')).join('\r\n');
 }
 
@@ -965,6 +1027,7 @@ document.getElementById('mv-avancar-ponto')?.addEventListener('click', () => {
   executarAlteracao(() => dadosMobilys.agir(viagem.rotaId, viagem.turno, 'avancar'));
 });
 document.getElementById('mv-filtrar-ponto')?.addEventListener('change', renderListaAlunosViagem);
+document.getElementById('mv-filtrar-confirmados')?.addEventListener('change', renderListaAlunosViagem);
 document.getElementById('btn-iniciar-viagem')?.addEventListener('click', () => {
   executarAlteracao(() => dadosMobilys.agir(viagem.rotaId, viagem.turno, 'iniciar'), 'Viagem iniciada. Confirmações encerradas para este trajeto.');
 });
@@ -989,7 +1052,15 @@ function renderListaAlunosViagem(){
   const filtro = document.getElementById('busca-alunos-viagem').value.toLowerCase();
   const lista = document.getElementById('lista-alunos-viagem');
   const porPonto = document.getElementById('mv-filtrar-ponto').checked && !document.getElementById('mv-filtrar-ponto').disabled;
-  const dados = viagem.alunos.filter(a => a.nome.toLowerCase().includes(filtro) && (!porPonto || indicePontoAluno(a) === viagem.pontoAtual));
+  const somenteConfirmados = document.getElementById('mv-filtrar-confirmados').checked;
+  const cancelados = somenteConfirmados ? [] : DB.alunos.filter(a =>
+    a.rota === viagem.rota.nome && dadosMobilys.agenda(a.id)?.[viagem.turno] === 'cancelado'
+  ).map(a => ({
+    ...a, cancelado: true,
+    embarqueIndice: viagem.turno === 'ida' ? Number(a.pontoIndice) : viagem.rota.paradasVolta.findIndex(p => p.local === a.instituicao && p.tipo === 'embarque'),
+    ponto: viagem.turno === 'ida' ? viagem.rota.paradas[a.pontoIndice]?.local : a.instituicao,
+  }));
+  const dados = [...viagem.alunos, ...cancelados].filter(a => a.nome.toLowerCase().includes(filtro) && (!porPonto || indicePontoAluno(a) === viagem.pontoAtual));
   const emAndamento = viagem.status === 'em-andamento';
 
   if (!dados.length){
@@ -1004,10 +1075,10 @@ function renderListaAlunosViagem(){
     <div class="cartao-aluno">
       <div class="avatar">${a.nome.split(' ').map(p=>p[0]).slice(0,2).join('')}</div>
       <div class="info"><div class="nome">${escaparHTML(a.nome)}</div><div class="ponto">${escaparHTML(a.ponto || 'Ponto não associado')}</div></div>
-      <div class="toggle-presenca">
+      ${a.cancelado ? '<span class="badge selo-ausente">Agendamento cancelado</span>' : `<div class="toggle-presenca">
         <button data-id="${a.id}" data-valor="presente" aria-label="Marcar ${escaparHTML(a.nome)} presente" aria-pressed="${val === 'presente'}" class="${val === 'presente' ? 'pres-ativo' : ''}" ${!podeRegistrar ? 'disabled' : ''}>Presente</button>
         <button data-id="${a.id}" data-valor="ausente" aria-label="Marcar ${escaparHTML(a.nome)} ausente" aria-pressed="${val === 'ausente'}" class="${val === 'ausente' ? 'aus-ativo' : ''}" ${!podeRegistrar ? 'disabled' : ''}>Ausente</button>
-      </div>
+      </div>`}
     </div>`;
   }).join('');
 
@@ -1110,9 +1181,12 @@ function renderHistoricoResp(){
   const corpo = document.getElementById('tabela-historico-resp');
   corpo.innerHTML = dados.map(h => `
     <tr>
-      <td data-label="Data">${escaparHTML(h.data)}</td><td data-label="Rota">${escaparHTML(h.rota)}</td><td data-label="Trajeto">${escaparHTML(h.turno)}</td>
+      <td data-label="Data">${escaparHTML(h.data)}</td>
+      <td data-label="Entrada">${escaparHTML(h.situacao === 'Aguardando registro' ? 'Não registrado' : horarioPresenca(h, 'entradaEm'))}</td>
+      <td data-label="Saída">${escaparHTML(h.situacao === 'Aguardando registro' ? 'Não registrado' : horarioPresenca(h, 'saidaEm'))}</td>
+      <td data-label="Rota">${escaparHTML(h.rota)}</td><td data-label="Trajeto">${escaparHTML(h.turno)}</td>
       <td data-label="Situação"><span class="badge ${h.situacao === 'Utilizado' ? 'selo-presente' : h.situacao === 'Aguardando registro' ? 'selo-pendente' : 'selo-ausente'}">${h.situacao}</span></td>
-    </tr>`).join('') || '<tr><td colspan="4"><div class="vazio"><i class="bi bi-search"></i><strong>Nenhuma viagem encontrada</strong>Altere os filtros para consultar outros trajetos.</div></td></tr>';
+    </tr>`).join('') || '<tr><td colspan="6"><div class="vazio"><i class="bi bi-search"></i><strong>Nenhuma viagem encontrada</strong>Altere os filtros para consultar outros trajetos.</div></td></tr>';
 }
 
 ['rh-situacao', 'rh-turno', 'rh-data', 'rh-ordem'].forEach(id => document.getElementById(id)?.addEventListener('change', renderHistoricoResp));

@@ -71,7 +71,7 @@ function criarDadosMobilys(iniciais, storage, agora = () => new Date()) {
         if (v.status !== 'nao-iniciada') throw new Error('A viagem já foi iniciada.');
         v.alunos = lista(s, v);
         if (v.alunos.some(a => !Number.isInteger(a.embarqueIndice) || !paradas[a.embarqueIndice])) throw new Error('Associe todos os alunos confirmados a um ponto e a uma instituição válidos.');
-        v.status = 'em-andamento'; v.iniciadaEm = new Date().toISOString();
+        v.status = 'em-andamento'; v.iniciadaEm = agora().toISOString();
       } else {
         if (v.status !== 'em-andamento') throw new Error('A viagem precisa estar em andamento.');
         if (acao === 'presenca') {
@@ -79,9 +79,12 @@ function criarDadosMobilys(iniciais, storage, agora = () => new Date()) {
           if (!aluno || !['presente', 'ausente'].includes(status)) throw new Error('Registro inválido.');
           if (!v.noPonto || aluno.embarqueIndice !== v.pontoAtual) throw new Error('Registre a presença quando o ônibus estiver no ponto do aluno.');
           const anterior = aluno.status;
+          const existente = s.db.historicoPresencas.find(p => p.viagemId === v.id && p.alunoId === alunoId);
           aluno.status = status;
           const registro = { viagemId: v.id, alunoId, aluno: aluno.nome, data: v.data, rota: v.rota.nome,
-            turno: turno === 'ida' ? 'Ida' : 'Volta', status, registradoEm: new Date().toISOString(), registradoPor: 'Motorista de demonstração' };
+            turno: turno === 'ida' ? 'Ida' : 'Volta', status, registradoEm: agora().toISOString(), registradoPor: 'Motorista de demonstração' };
+          registro.entradaEm = status === 'presente' ? (anterior === 'presente' ? existente?.entradaEm || existente?.registradoEm || registro.registradoEm : registro.registradoEm) : null;
+          registro.saidaEm = null;
           const indice = s.db.historicoPresencas.findIndex(p => p.viagemId === v.id && p.alunoId === alunoId);
           if (indice < 0) s.db.historicoPresencas.push(registro); else s.db.historicoPresencas[indice] = registro;
           (v.alteracoes || (v.alteracoes = [])).push({ alunoId, anterior, status, em: registro.registradoEm, por: registro.registradoPor });
@@ -93,7 +96,10 @@ function criarDadosMobilys(iniciais, storage, agora = () => new Date()) {
           } else v.noPonto = true;
         } else if (acao === 'encerrar') {
           if (v.pontoAtual < paradas.length || v.alunos.some(a => !a.status)) throw new Error('Conclua as paradas e os registros antes de encerrar.');
-          v.status = 'encerrada'; v.encerradaEm = new Date().toISOString();
+          v.status = 'encerrada'; v.encerradaEm = agora().toISOString();
+          s.db.historicoPresencas.filter(p => p.viagemId === v.id && p.status === 'presente').forEach(p => {
+            p.saidaEm = v.encerradaEm;
+          });
         } else throw new Error('Ação desconhecida.');
       }
       s.viagens[v.id] = v;
