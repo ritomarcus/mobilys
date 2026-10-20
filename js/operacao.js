@@ -16,7 +16,7 @@ async function iniciarOperacao(view) {
   const historico = ['admin-presencas','admin-relatorios','resp-historico'].includes(view);
   const titulos = { 'admin-dashboard':'Painel administrativo', 'motorista-viagem':'Minhas viagens', 'resp-agendamentos':'Agendamentos', 'resp-status':'Acompanhamento', 'admin-presencas':'Presenças', 'admin-relatorios':'Relatórios', 'resp-historico':'Histórico de transporte' };
   const main = document.getElementById('conteudo');
-  main.innerHTML = `<header class="operacao-hero"><div><span class="sobretitulo">MOBILYS / ${htmlSeguro(perfis[usuarioAtual.perfil])}</span><h1>${titulos[view]}</h1><p>${view.startsWith('resp-')?'Mais tranquilidade em cada trajeto. Acompanhe e organize o transporte dos seus alunos.':view==='motorista-viagem'?'Seu percurso organizado. Cada parada, cada aluno, tudo no mesmo lugar.':'Uma visão clara da operação para cuidar de cada trajeto.'}</p></div><div class="hero-data"><i class="bi bi-calendar3" aria-hidden="true"></i><span>${opData(opHoje)}<small>Transporte estudantil</small></span></div></header>
+  main.innerHTML = `<header class="operacao-hero"><div><span class="sobretitulo">MOBILYS / ${htmlSeguro(perfis[usuarioAtual.perfil])}</span><h1>${titulos[view]}</h1><p>${view.startsWith('resp-')?'Mais tranquilidade em cada trajeto. Acompanhe e organize o transporte dos seus alunos.':view==='motorista-viagem'?'Seu percurso organizado. Cada parada, cada aluno, tudo no mesmo lugar.':'Uma visão clara da operação para cuidar de cada trajeto.'}</p></div><div class="hero-data"><i class="bi bi-calendar3" aria-hidden="true"></i><span><span id="op-hoje">${opData(opHoje)}</span><small>Transporte estudantil</small></span></div></header>
     <div class="card painel p-3 mb-3"><form id="op-filtros" class="row g-3 align-items-end">
     ${historico ? `<div class="col-sm-4"><label for="op-inicio" class="form-label">Início</label><input required type="date" class="form-control" id="op-inicio" value="${opHoje.slice(0,8)}01"></div><div class="col-sm-4"><label for="op-fim" class="form-label">Fim</label><input required type="date" class="form-control" id="op-fim" value="${opHoje}"></div>` : `<div class="col-sm-5"><label for="op-data" class="form-label">Data</label><input required type="date" class="form-control" id="op-data" value="${opHoje}"></div>`}
     <div class="col-sm-4"><button class="btn btn-primary" type="submit">${historico?'Consultar':'Atualizar'}</button></div></form>
@@ -35,6 +35,15 @@ async function carregarOperacao(forcar = false) {
   if(opCarregando) return;
   opCarregando = true;
   try {
+    const hoje = (await opApi('/hoje')).data;
+    if (hoje !== opHoje) {
+      const filtro = document.getElementById('op-data');
+      const editando = document.querySelector('#op-conteudo [data-agenda-alterada]');
+      if (filtro?.value === opHoje && !editando) filtro.value = hoje;
+      opHoje = hoje;
+      document.getElementById('op-hoje').textContent = opData(hoje);
+      opUltimo = '';
+    }
     const data = document.getElementById('op-data')?.value;
     if(opView === 'resp-agendamentos') {
       if(!forcar && document.querySelector('#op-conteudo [data-agenda-alterada]')) return;
@@ -83,7 +92,7 @@ function indicadores(rows) {
   return `<div class="row g-3 mb-4 indicadores">${[['Presentes',presentes,'bi-person-check'],['Ausentes',ausentes,'bi-person-dash'],['Pendentes',rows.length-presentes-ausentes,'bi-hourglass-split'],['Frequência',presentes+ausentes?Math.round(1000*presentes/(presentes+ausentes))/10+'%':'—','bi-bar-chart']].map(([t,v,icon])=>`<div class="col-6 col-lg-3"><div class="card painel indicador"><i class="bi ${icon}" aria-hidden="true"></i><span>${t}</span><strong>${v}</strong><small>${t==='Frequência'?'Dos registros resolvidos':'No período selecionado'}</small></div></div>`).join('')}</div>`;
 }
 function desenharViagens({viagens,rotas,resumo,data}) {
-  document.getElementById('op-conteudo').innerHTML = (resumo?indicadores(resumo.presencas)+'<a href="admin-cadastros.html" class="btn btn-primary mb-3">Gerenciar cadastros</a>':'')+
+  document.getElementById('op-conteudo').innerHTML = (resumo?indicadores(resumo.presencas)+graficosMobilys.renderizar(resumo.presencas)+'<a href="admin-cadastros.html" class="btn btn-primary mb-3">Gerenciar cadastros</a>':'')+
     (opView==='motorista-viagem'?`<h2 class="h5">Rotas atribuídas</h2>${rotas.length?rotas.map(r=>`<article class="card painel p-3 mb-2"><h3 class="h6">${opTexto(r.nome)}</h3><p>${opTexto(r.turno)}</p><label for="viagem-veiculo-${r.id}" class="form-label">Veículo desta viagem</label><select class="form-select mb-3" id="viagem-veiculo-${r.id}">${(r.veiculos||[]).map(v=>`<option value="${v.id}">${opTexto(v.placa)} · ${v.capacidade} lugares</option>`).join('')}</select><div class="d-flex gap-2">${['IDA','VOLTA'].map(t=>opBotao('Iniciar '+opRotulos[t].toLowerCase(),'iniciar',r.id,`data-trajeto="${t}"`,data!==opHoje||viagens.some(v=>v.rota_id===r.id&&v.data_servico===data&&v.trajeto===t))).join('')}</div></article>`).join(''):'<p>Nenhuma rota atribuída. Peça à administração para vincular sua conta, motorista, veículo e rota.</p>'}`:'')+
     `<h2 class="h5 mt-4">Viagens da data e viagens em andamento</h2>${viagens.length?viagens.map(v=>`<article class="card painel p-3 mb-2"><h3 class="h6">${opTexto(v.rota_nome)} · ${opTexto(v.trajeto)}</h3><p>${opData(v.data_servico)} · ${opTexto(v.status)} · ${opTexto(v.motorista_nome)} · ${opTexto(v.placa)}</p><div>${opBotao('Abrir viagem','abrir',v.id)}</div></article>`).join(''):'<p>Nenhuma viagem disponível para esta data.</p>'}`;
 }
@@ -110,7 +119,7 @@ function desenharHistorico() {
   const rows=linhasHistorico();
   const tabela = `<div class="tabela-scroll"><table class="table operacao-tabela"><thead><tr><th>Data</th><th>Aluno</th><th>Rota / trajeto</th><th>Situação</th><th>Embarque / destino</th><th>Entrada</th><th>Desembarque</th><th>Fim do trajeto</th></tr></thead><tbody>${rows.map(p=>`<tr><td>${opData(p.data_servico)}</td><td>${opTexto(p.aluno_nome)}</td><td>${opTexto(p.rota_nome)} · ${opTexto(p.trajeto)}</td><td>${opTexto(p.status)}</td><td>${opTexto(p.embarque_local)} → ${opTexto(p.destino_local)}</td><td>${opHora(p.entrada_em)}</td><td>${opHora(p.desembarque_em)}</td><td>${opHora(p.saida_em)}</td></tr>`).join('')}</tbody></table></div>`;
   const semViagem=(opRelatorio.agendamentos||[]).filter(a=>!opRelatorio.presencas.some(p=>p.aluno_id===a.aluno_id&&p.data_servico===a.data_servico&&p.trajeto===a.trajeto));
-  document.getElementById('op-conteudo').innerHTML=indicadores(rows)+`<section class="card painel p-3"><h2 class="h5">Registros de viagem</h2>${rows.length?tabela:'<p>Nenhum registro para os filtros selecionados.</p>'}<p class="small">Frequência = presentes ÷ (presentes + ausentes). Pendentes e cancelamentos não entram no cálculo. Saída corresponde ao encerramento do trajeto.</p><div class="d-flex gap-2">${opBotao('Exportar CSV','csv','', '',!rows.length)}${opBotao('Imprimir / PDF','imprimir')}</div></section>`+(semViagem.length?`<section class="card painel p-3 mt-3"><h2 class="h5">Agendamentos sem registro de presença</h2><ul>${semViagem.map(a=>`<li>${opData(a.data_servico)} · ${opTexto(a.aluno_nome)} · ${opTexto(a.trajeto)}: ${opTexto(a.status)}</li>`).join('')}</ul></section>`:'');
+  document.getElementById('op-conteudo').innerHTML=indicadores(rows)+(opView==='admin-relatorios'?graficosMobilys.renderizar(rows):'')+`<section class="card painel p-3"><h2 class="h5">Registros de viagem</h2>${rows.length?tabela:'<p>Nenhum registro para os filtros selecionados.</p>'}<p class="small">Frequência = presentes ÷ (presentes + ausentes). Pendentes e cancelamentos não entram no cálculo. Saída corresponde ao encerramento do trajeto.</p><div class="d-flex gap-2">${opBotao('Exportar CSV','csv','', '',!rows.length)}${opBotao('Imprimir / PDF','imprimir')}</div></section>`+(semViagem.length?`<section class="card painel p-3 mt-3"><h2 class="h5">Agendamentos sem registro de presença</h2><ul>${semViagem.map(a=>`<li>${opData(a.data_servico)} · ${opTexto(a.aluno_nome)} · ${opTexto(a.trajeto)}: ${opTexto(a.status)}</li>`).join('')}</ul></section>`:'');
 }
 function exportarHistorico() {
   if(!opRelatorio) return;

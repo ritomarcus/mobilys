@@ -2,7 +2,8 @@
   "name": "mobilys-prototipo",
   "private": true,
   "scripts": {
-    "test": "node --test tests/api.test.cjs",
+    "test": "node --test tests/api.test.cjs tests/operacao-data.test.cjs tests/graficos.test.cjs",
+    "test:graficos:browser": "node tests/graficos.browser.cjs",
     "test:browser": "node tests/browser.cjs",
     "test:api:browser": "node tests/api.browser.cjs",
     "test:security": "node tests/security.integration.cjs",

@@ -23,6 +23,54 @@ class OperacaoIntegrationTest {
     @Autowired JdbcTemplate db;
     @MockitoBean Clock clock;
 
+    private long[] viagemSemDesembarque() {
+        when(clock.instant()).thenReturn(Instant.parse("2026-10-08T22:00:00Z"));
+        when(clock.withZone(any(ZoneId.class))).thenAnswer(a->Clock.fixed(clock.instant(),a.getArgument(0)));
+        long usuario=db.queryForObject("INSERT INTO usuarios(nome,email,senha_hash,perfil) VALUES('Teste','sem-destino@teste.local','hash','MOTORISTA') RETURNING id",Long.class);
+        long motorista=db.queryForObject("INSERT INTO motoristas(nome,cnh,telefone,usuario_id) VALUES('Teste','00000000002','19999999999',?) RETURNING id",Long.class,usuario);
+        long veiculo=db.queryForObject("INSERT INTO veiculos(placa,modelo,capacidade,motorista_id) VALUES('SEM0001','Teste',2,?) RETURNING id",Long.class,motorista);
+        long rota=db.queryForObject("INSERT INTO rotas(nome,turno,origem,destino,veiculo_id) VALUES('Sem desembarque','Noite','Origem','Destino',?) RETURNING id",Long.class,veiculo);
+        long parada=db.queryForObject("INSERT INTO paradas(rota_id,trajeto,ordem,local,horario,tipo) VALUES(?,'IDA',1,'Ponto','19:00','EMBARQUE') RETURNING id",Long.class,rota);
+        long aluno=db.queryForObject("INSERT INTO alunos(nome,matricula,turma,responsavel,rota_id) VALUES('Teste','SEMDESTINO','Noite','Teste',?) RETURNING id",Long.class,rota);
+        db.update("INSERT INTO alunos_pontos(aluno_id,parada_id) VALUES(?,?)",aluno,parada);
+        db.update("INSERT INTO agendamentos(aluno_id,data_servico,trajeto,status,parada_id) VALUES(?,'2026-10-08','IDA','CONFIRMADO',?)",aluno,parada);
+        return new long[]{usuario,rota,aluno,parada};
+    }
+
+    @Test
+    void impedeConfirmarSemDesembarqueCadastrado() {
+        var ids=viagemSemDesembarque();
+        long responsavel=db.queryForObject("INSERT INTO usuarios(nome,email,senha_hash,perfil) VALUES('Familia','sem-destino-familia@teste.local','hash','RESPONSAVEL') RETURNING id",Long.class);
+        db.update("UPDATE alunos SET usuario_id=? WHERE id=?",responsavel,ids[2]);
+        var u=new UsuarioPrincipal(responsavel,"Familia","sem-destino-familia@teste.local","hash","RESPONSAVEL",0);
+        assertThatThrownBy(()->operacao.confirmar(u,new Agenda(ids[2],LocalDate.of(2026,10,8),"IDA","CONFIRMADO",ids[3])))
+            .isInstanceOfSatisfying(org.springframework.web.server.ResponseStatusException.class,
+                e->assertThat(e.getStatusCode().value()).isEqualTo(409));
+    }
+
+    @Test
+    void impedeIniciarComConfirmacaoSemDestinoCompativel() {
+        var ids=viagemSemDesembarque();
+        var u=new UsuarioPrincipal(ids[0],"Teste","sem-destino@teste.local","hash","MOTORISTA",0);
+        assertThatThrownBy(()->operacao.iniciar(u,new Iniciar(ids[1],"IDA")))
+            .isInstanceOfSatisfying(org.springframework.web.server.ResponseStatusException.class,
+                e->assertThat(e.getStatusCode().value()).isEqualTo(409));
+        assertThat(db.queryForObject("SELECT count(*) FROM viagens WHERE rota_id=?",Integer.class,ids[1])).isZero();
+    }
+
+    @Test
+    void impedeEncerrarViagemLegadaComAlunoABordo() {
+        var ids=viagemSemDesembarque();
+        long viagem=db.queryForObject("INSERT INTO viagens(rota_id,motorista_usuario_id,rota_nome,motorista_nome,placa,data_servico,trajeto,iniciada_em,ponto_atual) VALUES(?,?,'Teste','Teste','SEM0001','2026-10-08','IDA',now(),2) RETURNING id",Long.class,ids[1],ids[0]);
+        db.update("INSERT INTO viagem_paradas(viagem_id,parada_original_id,ordem,local,referencia,horario,tipo) VALUES(?,?,1,'Ponto','','19:00','EMBARQUE')",viagem,ids[3]);
+        db.update("INSERT INTO participantes(viagem_id,aluno_id,aluno_nome,embarque_ordem,status) VALUES(?,?,'Teste',1,'PRESENTE')",viagem,ids[2]);
+        var u=new UsuarioPrincipal(ids[0],"Teste","sem-destino@teste.local","hash","MOTORISTA",0);
+        assertThatThrownBy(()->operacao.agir(u,viagem,new Acao(0L,"ENCERRAR",null,null)))
+            .isInstanceOfSatisfying(org.springframework.web.server.ResponseStatusException.class,
+                e->assertThat(e.getStatusCode().value()).isEqualTo(409));
+        assertThat(db.queryForObject("SELECT status FROM viagens WHERE id=?",String.class,viagem)).isEqualTo("EM_ANDAMENTO");
+    }
+
     @Test
     void preservaDestinoDesconhecidoEParadaMistaNaVoltaAntiga() {
         when(clock.instant()).thenReturn(Instant.parse("2026-10-08T22:00:00Z"));

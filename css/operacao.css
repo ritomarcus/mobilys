@@ -14,3 +14,29 @@
   .operacao-tabela { min-width: 0; font-size: 10pt; }
   .card { break-inside: avoid; }
 }
+
+/* Gr?ficos dos relat?rios e do painel, com valores acess?veis e impress?o. */
+.op-graficos { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.op-grafico { padding:24px; min-width:0; }
+.op-grafico:last-child { grid-column:1/-1; }
+.op-grafico svg { display:block; width:100%; height:auto; max-height:280px; overflow:visible; }
+.op-grafico svg text { fill:#475569; font:13px system-ui,sans-serif; }
+.op-grafico svg .op-grafico-total { font-size:32px; font-weight:700; fill:#116b60; }
+.op-grafico-distribuicao { display:flex; align-items:center; gap:12px; }
+.op-grafico-distribuicao svg { flex:0 0 45%; width:45%; aspect-ratio:1; object-fit:contain; }
+.op-grafico-legenda { list-style:none; padding:0; margin:0; min-width:0; }
+.op-grafico-legenda li { display:flex; gap:8px; align-items:baseline; margin:10px 0; overflow-wrap:anywhere; }
+.op-grafico-legenda li>span { flex:0 0 10px; height:10px; border-radius:50%; }
+.op-grafico-legenda strong { margin-left:auto; }
+.op-grafico-valores { margin-top:16px; font-size:.85rem; }
+.op-grafico-valores summary { cursor:pointer; color:#116b60; }
+.op-grafico-valores ul { margin-top:12px; padding-left:20px; }
+.op-grafico-rota { margin:16px 0; }
+.op-grafico-rota>strong { display:block; margin-bottom:6px; font-size:.9rem; }
+.op-grafico-barra { display:flex; min-height:28px; background:#eef2f5; border-radius:6px; overflow:hidden; }
+.op-grafico-barra span { color:white; text-align:center; font-weight:700; min-width:22px; padding:3px 0; }
+.op-barra-presentes { background:#116b60; }
+.op-barra-ausentes { background:#a14e16; }
+.op-barra-pendentes { background:#5865ab; }
+@media(max-width:767px) { .op-graficos { grid-template-columns:minmax(0,1fr); } .op-grafico { padding:16px; } .op-grafico-distribuicao { flex-direction:column; } .op-grafico-distribuicao svg { width:100%; max-width:260px; } }
+@media print { .op-graficos { display:block; } .op-grafico { margin-bottom:16px; break-inside:avoid; } .op-grafico-barra, .op-grafico svg { print-color-adjust:exact; -webkit-print-color-adjust:exact; } }

@@ -57,3 +57,32 @@ O ensaio de navegador da rota 11 foi repetido após informar os horários das
 aulas (19:00 em ambas; término 22:00 no SENAC e 22:15 no IF). As referências
 acadêmicas e horários simulados do ônibus foram atualizados, com novas capturas;
 as verificações continuaram aprovadas.
+
+## Revis?o de 20/10/2026
+
+- `mvn -B -f backend/pom.xml test`, com `DB_TEST_URL` apontando para `mobilys_test`: 11 testes Java aprovados, sem falhas.
+- `npm.cmd test`: 7 testes aprovados, incluindo virada do dia, preserva??o da data escolhida e de edi??es de agenda.
+- Regress?es cobertas: confirma??o sem desembarque cadastrado, in?cio com confirma??o sem destino compat?vel e encerramento de viagem legada com aluno ainda a bordo.
+- A interface consulta a data operacional do servidor a cada atualiza??o. Ao virar o dia, acompanha a nova data quando o filtro estava em hoje e n?o h? edi??o de agenda pendente.
+
+As su?tes HTTP e de navegador n?o foram reexecutadas nesta revis?o.
+
+## Gr?ficos com dados reais ? 20/10/2026
+
+Painel e Relat?rios agora mostram frequ?ncia di?ria, alunos distintos por rota
+no per?odo e presen?as/aus?ncias/pend?ncias por rota. Os gr?ficos usam os mesmos
+registros filtrados da tabela e do CSV. N?o utilizam os dados do mock.
+S?o SVG/HTML locais, com valores textuais acess?veis e suporte a impress?o/PDF.
+
+- `npm.cmd test`: 10 testes aprovados, incluindo agrega??o, frequ?ncia de 75%,
+  alunos distintos, pend?ncias sem frequ?ncia e nomes escapados.
+- `npm.cmd run test:graficos:browser`: aprovado no Chromium, com os dados locais
+  do cen?rio de apresenta??o. Verificados painel, relat?rios, filtros ida/volta
+  (50%/100%), total (75%), busca vazia, impress?o e larguras 1440/390/320 px.
+- Recursos do frontend atualizados por `mvn -B -f backend/pom.xml resources:resources`.
+- Capturas locais em `backend/target/relatorios-graficos-desktop.png` e
+  `backend/target/relatorios-graficos-celular.png`.
+
+O teste de navegador dos gr?ficos exige os dados criados pelo script de
+prepara??o da apresenta??o e o Chromium instalado com
+`node node_modules/playwright-core/cli.js install chromium`.

@@ -102,7 +102,7 @@ public class OperacaoService {
             var destinos=lista("SELECT id FROM paradas WHERE rota_id=? AND trajeto=? AND tipo IN ('DESEMBARQUE','AMBOS') AND ordem>=?",aluno.get("rota_id"),dados.trajeto(),embarque.get("ordem"));
             // Um único destino dispensa escolha; vários exigem confirmação explícita.
             if(destino==null && destinos.size()==1) destino=destinos.getFirst().get("id");
-            if(destino==null && contar("SELECT count(*) FROM paradas WHERE rota_id=? AND trajeto=? AND tipo IN ('DESEMBARQUE','AMBOS')",aluno.get("rota_id"),dados.trajeto())>0)
+            if(destino==null)
                 erro(HttpStatus.CONFLICT,"Selecione o ponto de desembarque após o embarque.");
             final Object escolhido=destino;
             if(destino!=null && destinos.stream().noneMatch(p->Objects.equals(p.get("id"),escolhido)))
@@ -166,7 +166,7 @@ public class OperacaoService {
             if(a.get(coluna)==null || paradas.stream().noneMatch(p->numero(p.get("id"))==numero(a.get(coluna)) && !p.get("tipo").equals("DESEMBARQUE")))
                 erro(HttpStatus.CONFLICT,"Há aluno confirmado sem ponto de embarque válido.");
             long embarque=numero(paradas.stream().filter(p->numero(p.get("id"))==numero(a.get(coluna))).findFirst().orElseThrow().get("ordem"));
-            if(paradas.stream().anyMatch(p->!p.get("tipo").equals("EMBARQUE")) && paradas.stream().noneMatch(p->!p.get("tipo").equals("EMBARQUE")&&numero(p.get("ordem"))>=embarque))
+            if(paradas.stream().noneMatch(p->!p.get("tipo").equals("EMBARQUE")&&numero(p.get("ordem"))>=embarque))
                 erro(HttpStatus.CONFLICT,"O itinerário precisa de uma parada de desembarque após os embarques confirmados.");
             var destinos=paradas.stream().filter(p->!p.get("tipo").equals("EMBARQUE")&&numero(p.get("ordem"))>=embarque).toList();
             if(a.get("destino_agendado")==null && destinos.size()==1) a.put("destino_agendado",destinos.getFirst().get("id"));
@@ -241,8 +241,7 @@ public class OperacaoService {
                     erro(HttpStatus.CONFLICT,"Registre os alunos pendentes desta parada.");
                 if(contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PRESENTE' AND desembarque_em IS NULL AND destino_ordem<=?",id,ponto)>0)
                     erro(HttpStatus.CONFLICT,"Confirme os desembarques previstos neste ponto antes de avançar.");
-                if(ponto==total && contar("SELECT count(*) FROM viagem_paradas WHERE viagem_id=? AND tipo IN ('DESEMBARQUE','AMBOS')",id)>0
-                    && contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PRESENTE' AND desembarque_em IS NULL",id)>0)
+                if(ponto==total && contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PRESENTE' AND desembarque_em IS NULL",id)>0)
                     erro(HttpStatus.CONFLICT,"Confirme os desembarques antes de concluir a última parada.");
                 db.update("UPDATE viagens SET ponto_atual=ponto_atual+1,no_ponto=false WHERE id=?",id);
                 omitirParadasSemPassageiros(u,id);
@@ -250,6 +249,8 @@ public class OperacaoService {
             case "ENCERRAR" -> {
                 if(ponto<=total||contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PENDENTE'",id)>0)
                     erro(HttpStatus.CONFLICT,"Conclua todas as paradas e presenças antes de encerrar.");
+                if(contar("SELECT count(*) FROM participantes WHERE viagem_id=? AND status='PRESENTE' AND desembarque_em IS NULL",id)>0)
+                    erro(HttpStatus.CONFLICT,"Confirme todos os desembarques antes de encerrar a viagem.");
                 Timestamp fim=agora();
                 db.update("UPDATE viagens SET status='ENCERRADA',encerrada_em=? WHERE id=?",fim,id);
                 db.update("UPDATE participantes SET saida_em=? WHERE viagem_id=? AND status='PRESENTE'",fim,id);
